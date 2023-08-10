@@ -1,6 +1,6 @@
 import pytest
 
-from totokenizers.factory import Totokenizer
+from totokenizers.factories import Totokenizer
 from totokenizers.schemas import ChatMLMessage, Chat
 from totokenizers.openai import OpenAITokenizer
 from totokenizers.jsonschema_formatter import FunctionJSONSchema
