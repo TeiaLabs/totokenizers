@@ -10,7 +10,7 @@ class Totokenizer:
     def from_model(cls, model: str):
         try:
             provider, model_name = model.split("/", 1)
-        except ValueError:
+        except (ValueError, TypeError):
             raise BadFormatForModelTag(model)
         if provider == "openai":
             return OpenAITokenizer(model_name)  # type: ignore
