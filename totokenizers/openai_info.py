@@ -1,48 +1,8 @@
 """
 https://github.com/Significant-Gravitas/Auto-GPT/blob/3a2d08fb415071cc94dd6fcee24cfbdd1fb487dd/autogpt/llm/base.py#L47
 """
+from .model_info import ChatModelInfo, TextModelInfo, EmbeddingModelInfo
 
-from dataclasses import dataclass
-
-
-@dataclass
-class ModelInfo:
-    """
-    Struct for model information.
-
-    Would be lovely to eventually get this directly from APIs.
-    But it needs to be scraped from websites for now.
-    """
-
-    name: str
-    max_tokens: int
-    prompt_token_cost: float
-
-
-@dataclass
-class CompletionModelInfo(ModelInfo):
-    """Struct for generic completion model information."""
-
-    completion_token_cost: float
-
-
-@dataclass
-class ChatModelInfo(CompletionModelInfo):
-    """Struct for chat model information."""
-
-    supports_functions: bool = False
-
-
-@dataclass
-class TextModelInfo(CompletionModelInfo):
-    """Struct for text completion model information."""
-
-
-@dataclass
-class EmbeddingModelInfo(ModelInfo):
-    """Struct for embedding model information."""
-
-    embedding_dimensions: int
 
 OPEN_AI_CHAT_MODELS = {
     info.name: info
