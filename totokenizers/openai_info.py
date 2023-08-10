@@ -1,0 +1,139 @@
+"""
+https://github.com/Significant-Gravitas/Auto-GPT/blob/3a2d08fb415071cc94dd6fcee24cfbdd1fb487dd/autogpt/llm/base.py#L47
+"""
+
+from dataclasses import dataclass
+
+
+@dataclass
+class ModelInfo:
+    """
+    Struct for model information.
+
+    Would be lovely to eventually get this directly from APIs.
+    But it needs to be scraped from websites for now.
+    """
+
+    name: str
+    max_tokens: int
+    prompt_token_cost: float
+
+
+@dataclass
+class CompletionModelInfo(ModelInfo):
+    """Struct for generic completion model information."""
+
+    completion_token_cost: float
+
+
+@dataclass
+class ChatModelInfo(CompletionModelInfo):
+    """Struct for chat model information."""
+
+    supports_functions: bool = False
+
+
+@dataclass
+class TextModelInfo(CompletionModelInfo):
+    """Struct for text completion model information."""
+
+
+@dataclass
+class EmbeddingModelInfo(ModelInfo):
+    """Struct for embedding model information."""
+
+    embedding_dimensions: int
+
+OPEN_AI_CHAT_MODELS = {
+    info.name: info
+    for info in [
+        ChatModelInfo(
+            name="gpt-3.5-turbo-0301",
+            prompt_token_cost=0.0015,
+            completion_token_cost=0.002,
+            max_tokens=4096,
+        ),
+        ChatModelInfo(
+            name="gpt-3.5-turbo-0613",
+            prompt_token_cost=0.0015,
+            completion_token_cost=0.002,
+            max_tokens=4096,
+            supports_functions=True,
+        ),
+        ChatModelInfo(
+            name="gpt-3.5-turbo-16k-0613",
+            prompt_token_cost=0.003,
+            completion_token_cost=0.004,
+            max_tokens=16384,
+            supports_functions=True,
+        ),
+        ChatModelInfo(
+            name="gpt-4-0314",
+            prompt_token_cost=0.03,
+            completion_token_cost=0.06,
+            max_tokens=8192,
+        ),
+        ChatModelInfo(
+            name="gpt-4-0613",
+            prompt_token_cost=0.03,
+            completion_token_cost=0.06,
+            max_tokens=8191,
+            supports_functions=True,
+        ),
+        ChatModelInfo(
+            name="gpt-4-32k-0314",
+            prompt_token_cost=0.06,
+            completion_token_cost=0.12,
+            max_tokens=32768,
+        ),
+        ChatModelInfo(
+            name="gpt-4-32k-0613",
+            prompt_token_cost=0.06,
+            completion_token_cost=0.12,
+            max_tokens=32768,
+            supports_functions=True,
+        ),
+    ]
+}
+
+# Set aliases for rolling model IDs
+chat_model_mapping = {
+    "gpt-3.5-turbo": "gpt-3.5-turbo-0613",
+    "gpt-3.5-turbo-16k": "gpt-3.5-turbo-16k-0613",
+    "gpt-4": "gpt-4-0613",
+    "gpt-4-32k": "gpt-4-32k-0613",
+}
+for alias, target in chat_model_mapping.items():
+    alias_info = ChatModelInfo(**OPEN_AI_CHAT_MODELS[target].__dict__)
+    alias_info.name = alias
+    OPEN_AI_CHAT_MODELS[alias] = alias_info
+
+OPEN_AI_TEXT_MODELS = {
+    info.name: info
+    for info in [
+        TextModelInfo(
+            name="text-davinci-003",
+            prompt_token_cost=0.02,
+            completion_token_cost=0.02,
+            max_tokens=4097,
+        ),
+    ]
+}
+
+OPEN_AI_EMBEDDING_MODELS = {
+    info.name: info
+    for info in [
+        EmbeddingModelInfo(
+            name="text-embedding-ada-002",
+            prompt_token_cost=0.0001,
+            max_tokens=8191,
+            embedding_dimensions=1536,
+        ),
+    ]
+}
+
+OPEN_AI_MODELS: dict[str, ChatModelInfo | EmbeddingModelInfo | TextModelInfo] = {
+    **OPEN_AI_CHAT_MODELS,
+    **OPEN_AI_TEXT_MODELS,
+    **OPEN_AI_EMBEDDING_MODELS,
+}
