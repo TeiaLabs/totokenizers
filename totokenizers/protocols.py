@@ -10,7 +10,7 @@ from .schemas import (
 
 # TODO: type hint functions correctly
 class Tokenizer(Protocol):
-    model_name: str
+    model: str
 
     def encode(self, text: str) -> list[int]:
         ...
