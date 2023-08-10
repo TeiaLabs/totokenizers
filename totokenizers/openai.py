@@ -45,6 +45,11 @@ class OpenAITokenizer:
 
     def _init_model_params(self):
         """https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb"""
+        if self.model == "text-embedding-ada-002":
+            self.count_chatml_tokens = NotImplementedError
+            self.count_functions_tokens = NotImplementedError
+            self.count_message_tokens = NotImplementedError
+            return
         if self.model == "gpt-3.5-turbo":
             logger.warning(
                 "'gpt-3.5-turbo' may update over time. Returning num tokens assuming 'gpt-3.5-turbo-0613'."
