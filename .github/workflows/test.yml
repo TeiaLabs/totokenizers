@@ -17,9 +17,7 @@ on:
       - "setup.py"
       - "requirements*"
       - ".github/workflows/test.yml"
-
-permissions:
-  contents: read
+  workflow_dispatch:
 
 
 jobs:
