@@ -11,6 +11,7 @@ A model-agnostic library to encode text into tokens and couting them using diffe
 ```python
 from totokenizers.factories import TotoModelInfo, Totokenizer
 
+mdoel = "openai/gpt-3.5-turbo-0613"
 desired_max_tokens = 250
 tokenizer = Totokenizer.from_model(model)
 model_info = TotoModelInfo.from_model(model)
