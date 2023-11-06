@@ -1,5 +1,5 @@
 import logging
-from typing import Literal, Optional
+from typing import Literal, Optional, Sequence, Mapping
 
 import tiktoken
 
@@ -83,7 +83,7 @@ class OpenAITokenizer:
         return len(self.encode(text))
 
     def count_chatml_tokens(
-        self, messages: Chat, functions: Optional[list[dict]] = None
+        self, messages: Chat, functions: Optional[Sequence[Mapping]] = None
     ) -> int:
         num_tokens = sum(map(self.count_message_tokens, messages))
         num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
