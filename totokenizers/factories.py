@@ -7,7 +7,7 @@ from .openai_info import OPEN_AI_MODELS
 class Totokenizer:
 
     @classmethod
-    def from_model(cls, model: str):
+    def from_model(cls, model: str) -> OpenAITokenizer:
         try:
             provider, model_name = model.split("/", 1)
         except (ValueError, TypeError):
@@ -15,6 +15,14 @@ class Totokenizer:
         if provider == "openai":
             return OpenAITokenizer(model_name)  # type: ignore
         raise ModelProviderNotFound(provider)
+
+    def encode(self, text: str) -> list[int]:
+        raise NotImplementedError
+
+    def count_tokens(self, text: str) -> int:
+        raise NotImplementedError
+
+
 
 
 class TotoModelInfo:

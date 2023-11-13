@@ -45,7 +45,7 @@ class OpenAITokenizer:
 
     def _init_model_params(self):
         """https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb"""
-        if self.model == "text-embedding-ada-002":
+        if self.model in ("text-embedding-ada-002", "text-davinci-003"):
             self.count_chatml_tokens = NotImplementedError
             self.count_functions_tokens = NotImplementedError
             self.count_message_tokens = NotImplementedError

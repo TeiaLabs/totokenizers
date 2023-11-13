@@ -1,4 +1,4 @@
-from typing import TypedDict, NotRequired, Literal
+from typing import TypedDict, NotRequired, Literal, Sequence
 
 
 class ChatMLMessage(TypedDict):
@@ -24,4 +24,4 @@ class FunctionChatMLMessage(TypedDict):
     role: Literal["function"]
 
 
-Chat = list[ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage]
+Chat = Sequence[ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage]
