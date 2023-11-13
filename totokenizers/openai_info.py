@@ -8,10 +8,32 @@ OPEN_AI_CHAT_MODELS = {
     info.name: info
     for info in [
         ChatModelInfo(
+            name="gpt-4-1106-preview",
+            prompt_token_cost=0.01,
+            completion_token_cost=0.03,
+            max_tokens=128000,
+            cutoff="2023-04-01",
+        ),
+        ChatModelInfo(
+            name="gpt-4-1106-vision-preview",
+            prompt_token_cost=0.01,
+            completion_token_cost=0.03,
+            max_tokens=128000,
+            cutoff="2023-04-01",
+        ),
+        ChatModelInfo(
+            name="gpt-3.5-turbo-1106",
+            prompt_token_cost=0.001,
+            completion_token_cost=0.002,
+            max_tokens=16385,
+            cutoff="2021-11-01",
+        ),
+        ChatModelInfo(
             name="gpt-3.5-turbo-0301",
             prompt_token_cost=0.0015,
             completion_token_cost=0.002,
             max_tokens=4096,
+            cutoff="2021-11-01",
         ),
         ChatModelInfo(
             name="gpt-3.5-turbo-0613",
@@ -19,13 +41,15 @@ OPEN_AI_CHAT_MODELS = {
             completion_token_cost=0.002,
             max_tokens=4096,
             supports_functions=True,
+            cutoff="2021-11-01",
         ),
         ChatModelInfo(
             name="gpt-3.5-turbo-16k-0613",
             prompt_token_cost=0.003,
             completion_token_cost=0.004,
-            max_tokens=16384,
+            max_tokens=16385,
             supports_functions=True,
+            cutoff="2021-11-01",
         ),
         ChatModelInfo(
             name="gpt-4-0314",
@@ -37,14 +61,16 @@ OPEN_AI_CHAT_MODELS = {
             name="gpt-4-0613",
             prompt_token_cost=0.03,
             completion_token_cost=0.06,
-            max_tokens=8191,
+            max_tokens=8192,
             supports_functions=True,
+            cutoff="2021-11-01",
         ),
         ChatModelInfo(
             name="gpt-4-32k-0314",
             prompt_token_cost=0.06,
             completion_token_cost=0.12,
             max_tokens=32768,
+            cutoff="2021-11-01",
         ),
         ChatModelInfo(
             name="gpt-4-32k-0613",
@@ -52,6 +78,7 @@ OPEN_AI_CHAT_MODELS = {
             completion_token_cost=0.12,
             max_tokens=32768,
             supports_functions=True,
+            cutoff="2021-11-01",
         ),
     ]
 }
