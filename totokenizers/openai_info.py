@@ -123,6 +123,7 @@ OPEN_AI_EMBEDDING_MODELS = {
     info.name: info
     for info in [
         EmbeddingModelInfo(
+            cutoff="2021-11-01",
             embedding_dimensions=1536,
             max_tokens=8191,
             name="text-embedding-ada-002",

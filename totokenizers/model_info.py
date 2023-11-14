@@ -14,6 +14,7 @@ class ModelInfo:
     name: str
     max_tokens: int
     prompt_token_cost: float
+    cutoff: str
 
 
 @dataclass
