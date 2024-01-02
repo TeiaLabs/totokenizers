@@ -5,16 +5,18 @@ CHAT_MODELS = {
     info.name: info
     for info in [
         ChatModelInfo(
+            completion_token_cost=0,
+            cutoff="1997-01-01",
+            max_tokens=4096,
             name="always-func",
             prompt_token_cost=0,
-            completion_token_cost=0,
-            max_tokens=4096,
         ),
         ChatModelInfo(
+            completion_token_cost=0,
+            cutoff="1997-01-01",
+            max_tokens=4096,
             name="always-chat",
             prompt_token_cost=0,
-            completion_token_cost=0,
-            max_tokens=4096,
             supports_functions=True,
         ),
     ]
