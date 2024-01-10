@@ -52,4 +52,6 @@ setuptools.setup(
     python_requires=">=3.11",
     install_requires=requirements,
     extras_require=extra_requirements,
+    package_data={"": ["*.json"]},
+    zip_safe=True,
 )
