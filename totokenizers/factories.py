@@ -1,4 +1,5 @@
 
+from .anthropic import AnthropicTokenizer, ANTHROPIC_MODELS
 from .errors import ModelNotFound, ModelProviderNotFound, BadFormatForModelTag
 from .mockai.info import MODELS as MOCKAI_MODELS
 from .mockai.tokenizer import MockAITokenizer
@@ -14,6 +15,8 @@ class Totokenizer:
             provider, model_name = model.split("/", 1)
         except (ValueError, TypeError):
             raise BadFormatForModelTag(model)
+        if provider == "anthropic":
+            return AnthropicTokenizer(model_name)  # type: ignore
         if provider == "openai":
             return OpenAITokenizer(model_name)  # type: ignore
         if provider == "mockai":
@@ -37,6 +40,10 @@ class TotoModelInfo:
             provider, model_name = model.split("/", 1)
         except ValueError:
             raise BadFormatForModelTag(model)
+        if provider == "anthropic":
+            if model_name not in ANTHROPIC_MODELS:
+                raise ModelNotFound(model_name)
+            return ANTHROPIC_MODELS[model_name]
         if provider == "openai":
             if model_name not in OPEN_AI_MODELS:
                 raise ModelNotFound(model_name)
