@@ -1,6 +1,7 @@
 """
 https://github.com/Significant-Gravitas/Auto-GPT/blob/3a2d08fb415071cc94dd6fcee24cfbdd1fb487dd/autogpt/llm/base.py#L47
 """
+
 from .model_info import ChatModelInfo, TextModelInfo, EmbeddingModelInfo
 
 
@@ -19,6 +20,14 @@ OPEN_AI_CHAT_MODELS = {
             completion_token_cost=0.03,
             cutoff="2023-04-01",
             max_tokens=128000,
+            name="gpt-4-turbo-preview",
+            prompt_token_cost=0.01,
+            supports_functions=True,
+        ),
+        ChatModelInfo(
+            completion_token_cost=0.03,
+            cutoff="2023-04-01",
+            max_tokens=128000,
             name="gpt-4-1106-preview",
             prompt_token_cost=0.01,
             supports_functions=True,
@@ -29,6 +38,14 @@ OPEN_AI_CHAT_MODELS = {
             max_tokens=128000,
             name="gpt-4-1106-vision-preview",
             prompt_token_cost=0.01,
+            supports_functions=True,
+        ),
+        ChatModelInfo(
+            completion_token_cost=0.0015,
+            cutoff="2021-09-01",
+            max_tokens=16385,
+            name="gpt-3.5-turbo-0125",
+            prompt_token_cost=0.0005,
             supports_functions=True,
         ),
         ChatModelInfo(

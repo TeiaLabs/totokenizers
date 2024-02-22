@@ -60,7 +60,11 @@ def _format_tool(tool):
         else:
             return str(v)
 
-    json_schema = tool["parameters"]
+    try:
+        json_schema = tool["parameters"]
+    except KeyError:
+        tool = tool["function"]
+        json_schema = tool["parameters"]
     result = f"// {tool['description']}\ntype {tool['name']} = ("
     formatted = format_object(json_schema, 0)
     if formatted is not None:
