@@ -1,3 +1,5 @@
 google-cloud-aiplatform
 tiktoken
 tokenizers
+transformers
+sentencepiece
