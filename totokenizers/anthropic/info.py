@@ -20,7 +20,7 @@ ANTHROPIC_CHAT_MODELS = {
             max_tokens=204_096,
             name="claude-2.1",
             prompt_token_cost=0.008,
-            supports_functions=False,
+            feature_flags=False,
         ),
         ChatModelInfo(
             completion_token_cost=0.0024,
@@ -28,8 +28,8 @@ ANTHROPIC_CHAT_MODELS = {
             max_tokens=104_096,
             name="claude-instant-1.2",
             prompt_token_cost=0.0008,
-            supports_functions=False,
-        )
+            feature_flags=False,
+        ),
     ]
 }
 
