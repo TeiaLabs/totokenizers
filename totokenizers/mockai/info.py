@@ -1,6 +1,5 @@
 from ..model_info import ChatModelInfo
 
-
 CHAT_MODELS = {
     info.name: info
     for info in [
@@ -17,7 +16,7 @@ CHAT_MODELS = {
             max_tokens=4096,
             name="always-chat",
             prompt_token_cost=0,
-            supports_functions=True,
+            feature_flags=True,
         ),
     ]
 }

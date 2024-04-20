@@ -1,5 +1,5 @@
-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Literal
 
 
 @dataclass
@@ -28,7 +28,11 @@ class CompletionModelInfo(ModelInfo):
 class ChatModelInfo(CompletionModelInfo):
     """Struct for chat model information."""
 
-    supports_functions: bool = False
+    max_output_tokens: int
+    feature_flags: list[Literal["functions", "tools", "json", "vision"]] = field(
+        default_factory=list
+    )
+    deprecated: bool = False
 
 
 @dataclass
@@ -40,4 +44,5 @@ class TextModelInfo(CompletionModelInfo):
 class EmbeddingModelInfo(ModelInfo):
     """Struct for embedding model information."""
 
-    embedding_dimensions: int
+    default_dim: int
+    supported_dim: list[int]

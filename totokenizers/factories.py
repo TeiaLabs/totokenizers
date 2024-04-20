@@ -1,35 +1,59 @@
+from typing import Literal, overload
 
-from .anthropic import AnthropicTokenizer, ANTHROPIC_MODELS
-from .errors import ModelNotFound, ModelProviderNotFound, BadFormatForModelTag
+from .anthropic import ANTHROPIC_MODELS, AnthropicTokenizer
+from .errors import BadFormatForModelTag, ModelNotFound, ModelProviderNotFound
 from .mockai.info import MODELS as MOCKAI_MODELS
 from .mockai.tokenizer import MockAITokenizer
 from .openai import OpenAITokenizer
 from .openai_info import OPEN_AI_MODELS
 
+TokenizerType = OpenAITokenizer | AnthropicTokenizer | MockAITokenizer
+
 
 class Totokenizer:
 
     @classmethod
-    def from_model(cls, model: str) -> OpenAITokenizer:
+    def from_model(cls, model: str) -> TokenizerType:
         try:
             provider, model_name = model.split("/", 1)
         except (ValueError, TypeError):
             raise BadFormatForModelTag(model)
-        if provider == "anthropic":
-            return AnthropicTokenizer(model_name)  # type: ignore
-        if provider == "openai":
-            return OpenAITokenizer(model_name)  # type: ignore
-        if provider == "mockai":
-            return MockAITokenizer(model_name)  # type: ignore
-        raise ModelProviderNotFound(provider)
+        return cls.from_provider(provider, model_name)
+
+    @overload
+    @classmethod
+    def from_provider(
+        cls, provider: Literal["openai"], model: str
+    ) -> OpenAITokenizer: ...
+    @overload
+    @classmethod
+    def from_provider(
+        cls, provider: Literal["anthropic"], model: str
+    ) -> AnthropicTokenizer: ...
+    @overload
+    @classmethod
+    def from_provider(
+        cls, provider: Literal["mockai"], model: str
+    ) -> MockAITokenizer: ...
+
+    @classmethod
+    def from_provider(cls, provider: str, model: str) -> TokenizerType:
+        # use pattern matching
+        match provider:
+            case "anthropic":
+                return AnthropicTokenizer(model)
+            case "openai":
+                return OpenAITokenizer(model)
+            case "mockai":
+                return MockAITokenizer(model)
+            case _:
+                raise ModelProviderNotFound(provider)
 
     def encode(self, text: str) -> list[int]:
         raise NotImplementedError
 
     def count_tokens(self, text: str) -> int:
         raise NotImplementedError
-
-
 
 
 class TotoModelInfo:
