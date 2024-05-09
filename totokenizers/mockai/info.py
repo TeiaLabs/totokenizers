@@ -9,6 +9,7 @@ CHAT_MODELS = {
             max_tokens=4096,
             name="always-func",
             prompt_token_cost=0,
+            max_output_tokens=-1,
         ),
         ChatModelInfo(
             completion_token_cost=0,
@@ -17,6 +18,7 @@ CHAT_MODELS = {
             name="always-chat",
             prompt_token_cost=0,
             feature_flags=True,
+            max_output_tokens=-1,
         ),
     ]
 }
