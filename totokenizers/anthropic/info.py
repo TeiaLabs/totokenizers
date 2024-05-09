@@ -9,7 +9,7 @@ Context and generation token limits:
 https://docs.anthropic.com/claude/reference/input-and-output-sizes
 """
 
-from ..model_info import ChatModelInfo, EmbeddingModelInfo, TextModelInfo
+from ..model_info import ChatModelInfo
 
 ANTHROPIC_CHAT_MODELS = {
     info.name: info
@@ -21,6 +21,7 @@ ANTHROPIC_CHAT_MODELS = {
             name="claude-2.1",
             prompt_token_cost=0.008,
             feature_flags=False,
+            max_output_tokens=4096,
         ),
         ChatModelInfo(
             completion_token_cost=0.0024,
@@ -29,6 +30,7 @@ ANTHROPIC_CHAT_MODELS = {
             name="claude-instant-1.2",
             prompt_token_cost=0.0008,
             feature_flags=False,
+            max_output_tokens=4096,
         ),
     ]
 }
