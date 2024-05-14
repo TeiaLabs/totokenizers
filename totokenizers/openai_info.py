@@ -10,11 +10,11 @@ OPEN_AI_CHAT_MODELS = {
         ChatModelInfo(
             completion_token_cost=0.015,
             cutoff="2023-10-01",
-            max_tokens=128_000,
+            feature_flags=["functions", "tools", "json", "vision", "voice"],
             max_output_tokens=128_000,
+            max_tokens=128_000,
             name="gpt-4o-2024-05-13",
             prompt_token_cost=0.005,
-            feature_flags=["functions", "tools", "json", "vision", "voice"],
         ),
         ChatModelInfo(
             completion_token_cost=0.03,
