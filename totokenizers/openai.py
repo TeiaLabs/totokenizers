@@ -52,6 +52,14 @@ class OpenAITokenizer:
             self.count_functions_tokens = NotImplementedError
             self.count_message_tokens = NotImplementedError
             return
+
+        if self.model in ("gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k", "gpt-4o",):
+            logger.warning(
+                f"'{self.model}' may update over time. Returning num tokens assuming '{self.model}-0613'."
+            )
+            self.model = f"{self.model}-0613"
+            self.model = "gpt-4-0613"
+
         if self.model in {
             "gpt-4-0314",
             "gpt-4-32k-0314",
@@ -69,6 +77,7 @@ class OpenAITokenizer:
             "gpt-3.5-turbo-0125",
             "gpt-4-turbo-2024-04-09",
             "gpt-4o-2024-05-13",
+            "gpt-4o",
         }:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
