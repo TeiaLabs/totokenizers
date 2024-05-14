@@ -62,16 +62,13 @@ class OpenAITokenizer:
             "gpt-3.5-turbo-1106",
             "gpt-4-1106-preview",
             "gpt-4-0125-preview",
-<<<<<<< HEAD
             "gpt-4-turbo-preview", # currently points to gpt-4-0125-preview
             "gpt-4-32k-0314",
             "gpt-4-32k-0613",
             "gpt-4-turbo-2024-04-09",
-            "gpt-4-turbo"
-=======
             "gpt-3.5-turbo-0125",
             "gpt-4-turbo-2024-04-09",
->>>>>>> 919e5e7 (Update OpenAI models (april's gpt-4))
+            "gpt-4o-2024-05-13",
         }:
             self.tokens_per_message = 3
             self.tokens_per_name = 1

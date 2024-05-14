@@ -29,7 +29,7 @@ class ChatModelInfo(CompletionModelInfo):
     """Struct for chat model information."""
 
     max_output_tokens: int
-    feature_flags: list[Literal["functions", "tools", "json", "vision"]] = field(
+    feature_flags: list[Literal["functions", "tools", "json", "vision", "voice"]] = field(
         default_factory=list
     )
     deprecated: bool = False

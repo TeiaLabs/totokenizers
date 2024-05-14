@@ -8,6 +8,15 @@ OPEN_AI_CHAT_MODELS = {
     info.name: info
     for info in [
         ChatModelInfo(
+            completion_token_cost=0.015,
+            cutoff="2023-10-01",
+            max_tokens=128_000,
+            max_output_tokens=128_000,
+            name="gpt-4o-2024-05-13",
+            prompt_token_cost=0.005,
+            feature_flags=["functions", "tools", "json", "vision", "voice"],
+        ),
+        ChatModelInfo(
             completion_token_cost=0.03,
             cutoff="2023-12-01",
             feature_flags=["functions", "tools", "json", "vision"],
@@ -129,7 +138,6 @@ OPEN_AI_CHAT_MODELS = {
         ),
     ]
 }
-
 
 OPEN_AI_TEXT_MODELS = {
     info.name: info
