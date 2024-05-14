@@ -17,18 +17,20 @@ ANTHROPIC_CHAT_MODELS = {
         ChatModelInfo(
             completion_token_cost=0.024,
             cutoff="2023-01-01",
+            feature_flags=[],
+            max_output_tokens=204_096,
             max_tokens=204_096,
             name="claude-2.1",
             prompt_token_cost=0.008,
-            feature_flags=False,
         ),
         ChatModelInfo(
             completion_token_cost=0.0024,
             cutoff="2023-01-01",
+            feature_flags=[],
+            max_output_tokens=104_096,
             max_tokens=104_096,
             name="claude-instant-1.2",
             prompt_token_cost=0.0008,
-            feature_flags=False,
         ),
     ]
 }
