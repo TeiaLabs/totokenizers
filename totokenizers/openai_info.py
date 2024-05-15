@@ -198,6 +198,20 @@ OPEN_AI_EMBEDDING_MODELS = {
     ]
 }
 
+# Set aliases for rolling model IDs
+chat_model_mapping = {
+    "gpt-3.5-turbo": "gpt-3.5-turbo-0125",
+    "gpt-3.5-turbo-16k": "gpt-3.5-turbo-16k-0613",
+    "gpt-4": "gpt-4-0613",
+    "gpt-4-turbo": "gpt-4-turbo-2024-04-09",
+    "gpt-4-32k": "gpt-4-32k-0613",
+}
+for alias, target in chat_model_mapping.items():
+    alias_info = ChatModelInfo(**OPEN_AI_CHAT_MODELS[target].__dict__)
+    alias_info.name = alias
+    OPEN_AI_CHAT_MODELS[alias] = alias_info
+
+
 OPEN_AI_MODELS: dict[str, ChatModelInfo | EmbeddingModelInfo | TextModelInfo] = {
     **OPEN_AI_CHAT_MODELS,
     **OPEN_AI_TEXT_MODELS,
