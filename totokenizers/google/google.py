@@ -3,7 +3,7 @@ from typing import Literal, Sequence
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
 
-from ..schemas import ChatMLMessage
+from ..schemas import ChatMLMessage, FunctionCallChatMLMessage, FunctionChatMLMessage
 
 
 class GeminiTokenizer:
@@ -20,7 +20,12 @@ class GeminiTokenizer:
 
     Reference for token count via SDK and REST API:
     - https://cloud.google.com/vertex-ai/docs/generative-ai/multimodal/get-token-count
+
+    Reference for messages requests:
+    - https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/send-chat-prompts-gemini?hl=pt-br
+    - https://cloud.google.com/vertex-ai/generative-ai/docs/chat/chat-prompts?hl=pt-br#gemini-1.0-pro
     """
+
     def __init__(
         self,
         model_name: Literal[
@@ -30,7 +35,7 @@ class GeminiTokenizer:
         project_id: str,
         location: str,
     ):
-        # Initialize the Vertex AI API (gets Google credentials as well)
+        # Initialize the Vertex AI API (gets Google credentialsl as well)
         vertexai.init(project=project_id, location=location)
         self.model = GenerativeModel(model_name)
 
@@ -42,7 +47,29 @@ class GeminiTokenizer:
         return response.total_tokens
 
     def count_chatml_tokens(self, messages: Sequence[ChatMLMessage]) -> int:
-        # Gemini uses "user"/"model" roles
-        # TODO: find out how many tokens each turn in conversation has
-        # We can infer the number of tokens for each turn based on the "count_tokens" method
-        pass
+
+        return sum([self.count_message_tokens(message) for message in messages])
+
+    def count_message_tokens(
+        self, message: ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage
+    ) -> int:
+        if isinstance(message, ChatMLMessage):
+            return self.count_tokens(message)
+        elif isinstance(message, FunctionCallChatMLMessage):
+            return self.count_functions_tokens(message.functions)
+        elif isinstance(message, FunctionChatMLMessage):
+            return self.count_functions_tokens(message.functions)
+        else:
+            raise TypeError("Invalid message type.")
+
+    def count_functions_tokens(self, functions: list[dict]) -> int: ...
+
+
+"""
+Without system
+why is sky blue? 
+Tokens: 5
+
+****************
+
+"""
