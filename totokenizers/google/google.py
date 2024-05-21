@@ -1,12 +1,24 @@
-from typing import Literal, Sequence
+from typing import Literal, Sequence, Optional, Mapping
 
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
+import json
+from ..schemas import (
+    ChatMLMessage,
+    FunctionCallChatMLMessage,
+    FunctionChatMLMessage,
+    Chat,
+)
+from vertexai.preview.generative_models import (
+    FunctionDeclaration,
+    GenerativeModel,
+    Part,
+    Tool,
+    Content,
+)
 
-from ..schemas import ChatMLMessage, FunctionCallChatMLMessage, FunctionChatMLMessage
 
-
-class GeminiTokenizer:
+class GoogleTokenizer:
     """
     Tokenizer for Google's Gemini models (Vertex AI API).
 
@@ -28,10 +40,7 @@ class GeminiTokenizer:
 
     def __init__(
         self,
-        model_name: Literal[
-            "gemini-pro",
-            "gemini-pro-vision",
-        ],
+        model_name: Literal["gemini-pro", "gemini-pro-vision"],
         project_id: str,
         location: str,
     ):
@@ -46,30 +55,119 @@ class GeminiTokenizer:
         response = self.model.count_tokens(text)
         return response.total_tokens
 
-    def count_chatml_tokens(self, messages: Sequence[ChatMLMessage]) -> int:
+    @classmethod
+    def _set_tool_from_json(cls, tools: Sequence[dict]) -> None:
+        """creates a tool object from each tool in the tools file. Necessary for the Vertex API."""
+        return [
+            Tool(function_declarations=[FunctionDeclaration(**tool) for tool in tools])
+        ]
 
-        return sum([self.count_message_tokens(message) for message in messages])
+    @classmethod
+    def _translate_chat_ml_message_to_gemini(cls, message: ChatMLMessage):
+        return Content(
+            **{
+                "role": message["role"],
+                "parts": [Part.from_text(message["content"])],
+            }
+        )
+
+    @classmethod
+    def _translate_function_call_chat_ml_message_to_gemini(
+        cls, messages: FunctionCallChatMLMessage
+    ):
+        messages["function_call"]["args"] = json.loads(
+            messages["function_call"]["arguments"]
+        )
+        messages["function_call"].pop("arguments")
+        messages.pop("role")
+        return Content(
+            role="model",
+            parts=[Part.from_dict(messages)],
+        )
+
+    @classmethod
+    def _translate_function_chat_ml_message_to_gemini(
+        cls, message: FunctionChatMLMessage
+    ):
+        return Content(
+            parts=[
+                Part.from_function_response(
+                    name=message["name"], response={"content": message["content"]}
+                )
+            ],
+        )
+
+    def count_chatml_tokens(
+        self, messages: Chat, functions: Optional[Sequence[Mapping]] = None
+    ) -> int:
+
+        return sum(
+            [
+                self.count_tokens(message["parts"][0]["text"])
+                for message in messages
+                if "parts"
+            ]
+        )
 
     def count_message_tokens(
         self, message: ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage
     ) -> int:
-        if isinstance(message, ChatMLMessage):
-            return self.count_tokens(message)
-        elif isinstance(message, FunctionCallChatMLMessage):
-            return self.count_functions_tokens(message.functions)
-        elif isinstance(message, FunctionChatMLMessage):
-            return self.count_functions_tokens(message.functions)
+        if "function_call" in message:
+            return (
+                sum(
+                    [
+                        self.model.count_tokens(k).total_tokens
+                        + self.model.count_tokens(v).total_tokens
+                        for k, v in json.loads(
+                            message["function_call"]["arguments"]
+                        ).items()
+                    ]
+                )
+                + self.model.count_tokens(message["function_call"]["name"]).total_tokens
+            )
+        elif message["role"] == "function":
+            return (
+                self.count_tokens(message["content"])
+                + self.count_tokens(message["name"])
+                + 1
+            )
         else:
-            raise TypeError("Invalid message type.")
+            return self.count_tokens(message["content"])
 
-    def count_functions_tokens(self, functions: list[dict]) -> int: ...
+    def count_functions_tokens(self, functions: list[dict]) -> int:
 
+        messagges = self._translate_chat_ml_message_to_gemini(functions["messages"])
+        tools = functions["functions"]
+        tokens = 0
 
-"""
-Without system
-why is sky blue? 
-Tokens: 5
+        def _count_parameters(parameters: dict) -> int:
+            tokens = 0
+            for param, param_value in list(parameters.items()):
+                if param == "description":
+                    if isinstance(param_value, str):
+                        tokens += self.model.count_tokens(param_value).total_tokens
+                if isinstance(param_value, dict):
+                    tokens += _count_parameters(param_value)
+                if param == "properties":
+                    tokens += sum(
+                        [
+                            self.model.count_tokens(k).total_tokens
+                            for k in list(param_value.keys())
+                        ]
+                    )
+            return tokens
 
-****************
-
-"""
+        for tool in tools:
+            tokens += (
+                self.model.count_tokens(tool["name"]).total_tokens
+                + self.model.count_tokens(tool["description"]).total_tokens
+                + sum(
+                    [
+                        self.model.count_tokens(param_value_i).total_tokens
+                        for param_value_i in tool["parameters"]["required"]
+                    ]
+                )
+                + _count_parameters(tool["parameters"])
+            )
+        tokens += self.count_chatml_tokens(messagges)
+        return tokens
