@@ -1,7 +1,7 @@
 from typing import Literal, Sequence, Optional, Mapping
 
-import vertexai
 from vertexai.preview.generative_models import GenerativeModel
+import dotenv
 import json
 from ..schemas import (
     ChatMLMessage,
@@ -9,6 +9,7 @@ from ..schemas import (
     FunctionChatMLMessage,
     Chat,
 )
+import vertexai
 from vertexai.preview.generative_models import (
     FunctionDeclaration,
     GenerativeModel,
@@ -16,6 +17,9 @@ from vertexai.preview.generative_models import (
     Tool,
     Content,
 )
+import os
+
+dotenv.load_dotenv("../.env")
 
 
 class GoogleTokenizer:
@@ -38,14 +42,12 @@ class GoogleTokenizer:
     - https://cloud.google.com/vertex-ai/generative-ai/docs/chat/chat-prompts?hl=pt-br#gemini-1.0-pro
     """
 
-    def __init__(
-        self,
-        model_name: Literal["gemini-pro", "gemini-pro-vision"],
-        project_id: str,
-        location: str,
-    ):
+    def __init__(self, model_name: Literal["gemini-pro", "gemini-pro-vision"]):
         # Initialize the Vertex AI API (gets Google credentialsl as well)
-        vertexai.init(project=project_id, location=location)
+
+        vertexai.init(
+            project=os.environ.get("project_id"), location=os.environ.get("location")
+        )
         self.model = GenerativeModel(model_name)
 
     def encode(self, text: str) -> list[int]:
@@ -55,57 +57,20 @@ class GoogleTokenizer:
         response = self.model.count_tokens(text)
         return response.total_tokens
 
-    @classmethod
-    def _set_tool_from_json(cls, tools: Sequence[dict]) -> None:
-        """creates a tool object from each tool in the tools file. Necessary for the Vertex API."""
-        return [
-            Tool(function_declarations=[FunctionDeclaration(**tool) for tool in tools])
-        ]
-
-    @classmethod
-    def _translate_chat_ml_message_to_gemini(cls, message: ChatMLMessage):
-        return Content(
-            **{
-                "role": message["role"],
-                "parts": [Part.from_text(message["content"])],
-            }
-        )
-
-    @classmethod
-    def _translate_function_call_chat_ml_message_to_gemini(
-        cls, messages: FunctionCallChatMLMessage
-    ):
-        messages["function_call"]["args"] = json.loads(
-            messages["function_call"]["arguments"]
-        )
-        messages["function_call"].pop("arguments")
-        messages.pop("role")
-        return Content(
-            role="model",
-            parts=[Part.from_dict(messages)],
-        )
-
-    @classmethod
-    def _translate_function_chat_ml_message_to_gemini(
-        cls, message: FunctionChatMLMessage
-    ):
-        return Content(
-            parts=[
-                Part.from_function_response(
-                    name=message["name"], response={"content": message["content"]}
-                )
-            ],
-        )
-
     def count_chatml_tokens(
         self, messages: Chat, functions: Optional[Sequence[Mapping]] = None
     ) -> int:
-
-        return sum(
+        tokens = 0
+        if functions:
+            tokens += self.count_functions_tokens(functions)
+        return tokens + sum(
             [
-                self.count_tokens(message["parts"][0]["text"])
+                (
+                    self.count_tokens(message["parts"][0]["text"])
+                    if "parts" in messages
+                    else self.count_tokens(message["content"])
+                )
                 for message in messages
-                if "parts"
             ]
         )
 
@@ -136,8 +101,6 @@ class GoogleTokenizer:
 
     def count_functions_tokens(self, functions: list[dict]) -> int:
 
-        messagges = self._translate_chat_ml_message_to_gemini(functions["messages"])
-        tools = functions["functions"]
         tokens = 0
 
         def _count_parameters(parameters: dict) -> int:
@@ -157,7 +120,7 @@ class GoogleTokenizer:
                     )
             return tokens
 
-        for tool in tools:
+        for tool in functions:
             tokens += (
                 self.model.count_tokens(tool["name"]).total_tokens
                 + self.model.count_tokens(tool["description"]).total_tokens
@@ -169,5 +132,4 @@ class GoogleTokenizer:
                 )
                 + _count_parameters(tool["parameters"])
             )
-        tokens += self.count_chatml_tokens(messagges)
         return tokens
