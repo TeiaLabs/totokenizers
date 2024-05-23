@@ -11,15 +11,29 @@ from ..schemas import (
 )
 import vertexai
 from vertexai.preview.generative_models import (
-    FunctionDeclaration,
     GenerativeModel,
-    Part,
-    Tool,
-    Content,
 )
+from google.oauth2 import service_account
+from ..errors import ModelNotSupported
+
 import os
 
-dotenv.load_dotenv("../.env")
+dotenv.load_dotenv()
+
+credetials_info = {
+    "type": os.environ["type"],
+    "project_id": os.environ["project_id"],
+    "private_key_id": os.environ["private_key_id"],
+    "private_key": os.environ["private_key"].replace("\\n", "\n"),
+    "client_email": os.environ["client_email"],
+    "client_id": os.environ["client_id"],
+    "auth_uri": os.environ["auth_uri"],
+    "token_uri": os.environ["token_uri"],
+    "auth_provider_x509_cert_url": os.environ["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": os.environ["client_x509_cert_url"],
+    "universe_domain": os.environ["universe_domain"],
+}
+credentials = service_account.Credentials.from_service_account_info(credetials_info)
 
 
 class GoogleTokenizer:
@@ -42,47 +56,56 @@ class GoogleTokenizer:
     - https://cloud.google.com/vertex-ai/generative-ai/docs/chat/chat-prompts?hl=pt-br#gemini-1.0-pro
     """
 
-    def __init__(self, model_name: Literal["gemini-pro", "gemini-pro-vision"]):
+    def __init__(self, model_name: str):
         # Initialize the Vertex AI API (gets Google credentialsl as well)
 
-        vertexai.init(
-            project=os.environ.get("project_id"), location=os.environ.get("location")
-        )
-        self.model = GenerativeModel(model_name)
+        vertexai.init(project=os.environ.get("project_id"), credentials=credentials)
+        if model_name in {
+            "gemini-1.0-pro-001",
+            "gemini-1.0-pro-002",
+            "gemini-pro-vision-001",
+        }:
+            self.model = GenerativeModel(model_name)
+
+        else:
+            raise ModelNotSupported(model_name)
 
     def encode(self, text: str) -> list[int]:
         raise NotImplementedError("Method unavailable for Google's Gemini models.")
 
     def count_tokens(self, text: str) -> int:
+        """
+        Count the text tokens using the Vertex AI API.
+        """
         response = self.model.count_tokens(text)
         return response.total_tokens
 
     def count_chatml_tokens(
         self, messages: Chat, functions: Optional[Sequence[Mapping]] = None
     ) -> int:
-        tokens = 0
+        """
+        Handle the counting of tokens for Chat messages and functions.
+        """
+        tokens: int = 0
         if functions:
             tokens += self.count_functions_tokens(functions)
-        return tokens + sum(
-            [
-                (
-                    self.count_tokens(message["parts"][0]["text"])
-                    if "parts" in messages
-                    else self.count_tokens(message["content"])
-                )
-                for message in messages
-            ]
-        )
+        messages_tokens: Sequence[int] = [
+            (self.count_message_tokens(message)) for message in messages
+        ]
+        return tokens + sum(messages_tokens)
 
     def count_message_tokens(
         self, message: ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage
     ) -> int:
+        """
+        Count the tokens for a single message.
+        """
         if "function_call" in message:
             return (
                 sum(
                     [
-                        self.model.count_tokens(k).total_tokens
-                        + self.model.count_tokens(v).total_tokens
+                        self.model.count_tokens(str(k)).total_tokens
+                        + self.model.count_tokens(str(v)).total_tokens
                         for k, v in json.loads(
                             message["function_call"]["arguments"]
                         ).items()
@@ -99,11 +122,13 @@ class GoogleTokenizer:
         else:
             return self.count_tokens(message["content"])
 
-    def count_functions_tokens(self, functions: list[dict]) -> int:
-
+    def count_functions_tokens(self, functions: Sequence[Mapping]) -> int:
+        """
+        Count the tokens for a list of gemini functions
+        """
         tokens = 0
 
-        def _count_parameters(parameters: dict) -> int:
+        def _count_parameters(parameters: Mapping[str, str | Mapping[str, str]]) -> int:
             tokens = 0
             for param, param_value in list(parameters.items()):
                 if param == "description":
@@ -112,12 +137,13 @@ class GoogleTokenizer:
                 if isinstance(param_value, dict):
                     tokens += _count_parameters(param_value)
                 if param == "properties":
-                    tokens += sum(
-                        [
-                            self.model.count_tokens(k).total_tokens
-                            for k in list(param_value.keys())
-                        ]
-                    )
+                    if isinstance(param_value, dict):
+                        tokens += sum(
+                            [
+                                self.model.count_tokens(k).total_tokens
+                                for k in list(param_value.keys())
+                            ]
+                        )
             return tokens
 
         for tool in functions:
