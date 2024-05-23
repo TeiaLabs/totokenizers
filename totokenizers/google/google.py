@@ -20,21 +20,6 @@ import os
 
 dotenv.load_dotenv()
 
-credetials_info = {
-    "type": os.environ["type"],
-    "project_id": os.environ["project_id"],
-    "private_key_id": os.environ["private_key_id"],
-    "private_key": os.environ["private_key"].replace("\\n", "\n"),
-    "client_email": os.environ["client_email"],
-    "client_id": os.environ["client_id"],
-    "auth_uri": os.environ["auth_uri"],
-    "token_uri": os.environ["token_uri"],
-    "auth_provider_x509_cert_url": os.environ["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": os.environ["client_x509_cert_url"],
-    "universe_domain": os.environ["universe_domain"],
-}
-credentials = service_account.Credentials.from_service_account_info(credetials_info)
-
 
 class GoogleTokenizer:
     """
@@ -59,7 +44,7 @@ class GoogleTokenizer:
     def __init__(self, model_name: str):
         # Initialize the Vertex AI API (gets Google credentialsl as well)
 
-        vertexai.init(project=os.environ.get("project_id"), credentials=credentials)
+        self.load_gemini()
         if model_name in {
             "gemini-1.0-pro-001",
             "gemini-1.0-pro-002",
@@ -69,6 +54,32 @@ class GoogleTokenizer:
 
         else:
             raise ModelNotSupported(model_name)
+
+    def load_gemini(self):
+        try:
+            credetials_info = {
+                "type": os.environ["type"],
+                "project_id": os.environ["project_id"],
+                "private_key_id": os.environ["private_key_id"],
+                "private_key": os.environ["private_key"].replace("\\n", "\n"),
+                "client_email": os.environ["client_email"],
+                "client_id": os.environ["client_id"],
+                "auth_uri": os.environ["auth_uri"],
+                "token_uri": os.environ["token_uri"],
+                "auth_provider_x509_cert_url": os.environ[
+                    "auth_provider_x509_cert_url"
+                ],
+                "client_x509_cert_url": os.environ["client_x509_cert_url"],
+                "universe_domain": os.environ["universe_domain"],
+            }
+            credentials = service_account.Credentials.from_service_account_info(
+                credetials_info
+            )
+            vertexai.init(project=os.environ.get("project_id"), credentials=credentials)
+        except Exception as e:
+            raise Exception(
+                "You need to set up Google Cloud authentication before using this tokenizer."
+            )
 
     def encode(self, text: str) -> list[int]:
         raise NotImplementedError("Method unavailable for Google's Gemini models.")

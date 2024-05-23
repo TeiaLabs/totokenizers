@@ -10,6 +10,7 @@ from totokenizers.schemas import (
     FunctionChatMLMessage,
     Chat,
 )
+from pytest_mock import MockerFixture
 
 
 @pytest.fixture(scope="module")
@@ -133,11 +134,14 @@ def messages(chat):
     }
 
 
-def test_count_tokens_gem(model_tag: str):
+def authentication_mock(args): ...
+
+
+def test_count_tokens_gem(mocker, model_tag: str):
     # Create a mock response
     mock_response = MagicMock()
     mock_response = 2
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_tokens method in the GoogleTokenizer class
     with patch.object(Totokenizer, "count_tokens", return_value=mock_response):
         tokenizer = Totokenizer.from_model(model_tag)
@@ -145,11 +149,12 @@ def test_count_tokens_gem(model_tag: str):
         assert tokenizer.count_tokens(message) == 2
 
 
-def test_gemini_chatml_messages(chatml_messages):
+def test_gemini_chatml_messages(mocker, chatml_messages):
     # Create mock responses
     mock_count_chatml_tokens_response = 12
     mock_count_tokens_response = MagicMock()
     mock_count_tokens_response = 2
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
 
     # Patch the count_chatml_tokens and count_tokens methods in the GoogleTokenizer class
     with patch.object(
@@ -171,9 +176,10 @@ def test_gemini_chatml_messages(chatml_messages):
         assert count_tokens == 2
 
 
-def test_gemini_function_call_chat_ml_message(function_call_chat_ml_message):
+def test_gemini_function_call_chat_ml_message(mocker, function_call_chat_ml_message):
     # Create a mock response for count_message_tokens
     mock_count_message_tokens_response = 9
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
 
     # Patch the count_message_tokens method in the GoogleTokenizer class
     with patch.object(
@@ -187,10 +193,10 @@ def test_gemini_function_call_chat_ml_message(function_call_chat_ml_message):
         assert count_tokens == 9
 
 
-def test_gemini_function_chat_ml_message(function_chat_ml_message):
+def test_gemini_function_chat_ml_message(mocker, function_chat_ml_message):
     # Create a mock response for count_message_tokens
     mock_count_message_tokens_response = 26
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_message_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -203,10 +209,10 @@ def test_gemini_function_chat_ml_message(function_chat_ml_message):
         assert count_tokens == 26
 
 
-def test_gemini_tools(tools):
+def test_gemini_tools(mocker, tools):
     # Create a mock response for count_functions_tokens
     mock_count_functions_tokens_response = 28
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_functions_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -219,10 +225,10 @@ def test_gemini_tools(tools):
         assert count_tokens == 28
 
 
-def test_gemini_chat(messages):
+def test_gemini_chat(mocker, messages):
     # Create a mock response for count_chatml_tokens
     mock_count_chatml_tokens_response = 71
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_chatml_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -235,10 +241,10 @@ def test_gemini_chat(messages):
         assert count_tokens == 71
 
 
-def test_simple_user_message():
+def test_simple_user_message(mocker):
     # Create a mock response for count_message_tokens
     mock_count_message_tokens_response = 5
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_message_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -253,10 +259,10 @@ def test_simple_user_message():
         assert tokenizer.count_message_tokens(user_message_example) == 5
 
 
-def test_simple_chat():
+def test_simple_chat(mocker):
     # Create a mock response for count_chatml_tokens
     mock_count_chatml_tokens_response = 5
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_chatml_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -271,10 +277,10 @@ def test_simple_chat():
         assert tokenizer.count_chatml_tokens(simple_chat) == 5
 
 
-def test_functions_chat_systemless(example_function_jsonschema: dict):
+def test_functions_chat_systemless(mocker, example_function_jsonschema: dict):
     # Create a mock response for count_chatml_tokens
     mock_count_chatml_tokens_response = 25
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_chatml_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -291,12 +297,11 @@ def test_functions_chat_systemless(example_function_jsonschema: dict):
 
 
 def test_2_functions_chat(
-    example_function_jsonschema: dict,
-    example_function2_jsonschema: dict,
+    example_function_jsonschema: dict, example_function2_jsonschema: dict, mocker
 ):
     # Create a mock response for count_chatml_tokens
     mock_count_chatml_tokens_response = 68
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_chatml_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -313,12 +318,11 @@ def test_2_functions_chat(
 
 
 def test_2_functions_chat_systemless(
-    example_function_jsonschema: dict,
-    example_function2_jsonschema: dict,
+    example_function_jsonschema: dict, example_function2_jsonschema: dict, mocker
 ):
     # Create a mock response for count_chatml_tokens
     mock_count_chatml_tokens_response = 65
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_chatml_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -331,12 +335,10 @@ def test_2_functions_chat_systemless(
         assert tokenizer.count_chatml_tokens(simple_chat, functions) == 65
 
 
-def test_function_call_chat(
-    example_function_jsonschema: dict,
-):
+def test_function_call_chat(example_function_jsonschema: dict, mocker):
     # Create a mock response for count_chatml_tokens
     mock_count_chatml_tokens_response = 54
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_chatml_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -365,12 +367,10 @@ def test_function_call_chat(
         assert tokenizer.count_chatml_tokens(simple_chat, functions) == 54
 
 
-def test_function_call_chat_systemless(
-    example_function_jsonschema: dict,
-):
+def test_function_call_chat_systemless(example_function_jsonschema: dict, mocker):
     # Create a mock response for count_chatml_tokens
     mock_count_chatml_tokens_response = 51
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_chatml_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -398,11 +398,11 @@ def test_function_call_chat_systemless(
         assert tokenizer.count_chatml_tokens(simple_chat, functions) == 51
 
 
-def test_function_role(example_function_jsonschema: dict):
+def test_function_role(example_function_jsonschema: dict, mocker):
     # Create mock responses for count_functions_tokens and count_chatml_tokens
     mock_count_functions_tokens_response = 23
     mock_count_chatml_tokens_response = 39
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_functions_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -429,11 +429,11 @@ def test_function_role(example_function_jsonschema: dict):
             assert tokenizer.count_chatml_tokens(simple_chat, functions) == 39
 
 
-def test_function_role_systemless(example_function_jsonschema: dict):
+def test_function_role_systemless(example_function_jsonschema: dict, mocker):
     # Create mock responses for count_functions_tokens and count_chatml_tokens
     mock_count_functions_tokens_response = 23
     mock_count_chatml_tokens_response = 36
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_functions_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -459,11 +459,11 @@ def test_function_role_systemless(example_function_jsonschema: dict):
             assert tokenizer.count_chatml_tokens(simple_chat, functions) == 36
 
 
-def test_functioncall_message(example_function_jsonschema: dict):
+def test_functioncall_message(example_function_jsonschema: dict, mocker):
     # Create mock responses for count_functions_tokens and count_chatml_tokens
     mock_count_functions_tokens_response = 23
     mock_count_chatml_tokens_response = 35
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_functions_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
@@ -493,11 +493,11 @@ def test_functioncall_message(example_function_jsonschema: dict):
             assert tokenizer.count_chatml_tokens(simple_chat, functions) == 35
 
 
-def test_functioncall_message_systemless(example_function_jsonschema: dict):
+def test_functioncall_message_systemless(example_function_jsonschema: dict, mocker):
     # Create mock responses for count_functions_tokens and count_chatml_tokens
     mock_count_functions_tokens_response = 23
     mock_count_chatml_tokens_response = 32
-
+    mocker.patch("totokenizers.google.GoogleTokenizer.load_gemini", authentication_mock)
     # Patch the count_functions_tokens method in the GoogleTokenizer class
     with patch.object(
         GoogleTokenizer,
