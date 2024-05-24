@@ -134,7 +134,7 @@ def messages(chat):
     }
 
 
-def authentication_mock(args): ...
+def authentication_mock(*args, **kwargs): ...
 
 
 def test_count_tokens_gem(mocker, model_tag: str):

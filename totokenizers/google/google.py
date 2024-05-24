@@ -1,6 +1,5 @@
-from typing import Literal, Sequence, Optional, Mapping
+from typing import Sequence, Optional, Mapping
 
-from vertexai.preview.generative_models import GenerativeModel
 import dotenv
 import json
 from ..schemas import (
@@ -13,9 +12,12 @@ import vertexai
 from vertexai.preview.generative_models import (
     GenerativeModel,
 )
+from google.api_core.exceptions import GoogleAPIError
 from google.oauth2 import service_account
-from ..errors import ModelNotSupported
-
+from google.auth.exceptions import GoogleAuthError
+from ..errors import ModelNotSupported, CredentialsNotFound, InvalidCredentials
+from binascii import Error as AsciiError
+from pyasn1.error import PyAsn1Error
 import os
 
 dotenv.load_dotenv()
@@ -44,13 +46,13 @@ class GoogleTokenizer:
     def __init__(self, model_name: str):
         # Initialize the Vertex AI API (gets Google credentialsl as well)
 
-        self.load_gemini()
         if model_name in {
             "gemini-1.0-pro-001",
             "gemini-1.0-pro-002",
             "gemini-pro-vision-001",
         }:
             self.model = GenerativeModel(model_name)
+            self.load_gemini()
 
         else:
             raise ModelNotSupported(model_name)
@@ -58,28 +60,26 @@ class GoogleTokenizer:
     def load_gemini(self):
         try:
             credetials_info = {
-                "type": os.environ["type"],
-                "project_id": os.environ["project_id"],
-                "private_key_id": os.environ["private_key_id"],
                 "private_key": os.environ["private_key"].replace("\\n", "\n"),
                 "client_email": os.environ["client_email"],
-                "client_id": os.environ["client_id"],
-                "auth_uri": os.environ["auth_uri"],
                 "token_uri": os.environ["token_uri"],
-                "auth_provider_x509_cert_url": os.environ[
-                    "auth_provider_x509_cert_url"
-                ],
-                "client_x509_cert_url": os.environ["client_x509_cert_url"],
-                "universe_domain": os.environ["universe_domain"],
             }
+        except KeyError as e:
+            raise CredentialsNotFound(credential=e)
+        try:
             credentials = service_account.Credentials.from_service_account_info(
                 credetials_info
             )
             vertexai.init(project=os.environ.get("project_id"), credentials=credentials)
-        except Exception as e:
-            raise Exception(
-                "You need to set up Google Cloud authentication before using this tokenizer."
-            )
+            self.model.count_tokens("test")
+        except GoogleAPIError as e:
+            raise InvalidCredentials(error=e)
+        except GoogleAuthError as e:
+            raise InvalidCredentials(error=e)
+        except AsciiError as e:
+            raise InvalidCredentials(error=e)
+        except PyAsn1Error as e:
+            raise InvalidCredentials(error=e)
 
     def encode(self, text: str) -> list[int]:
         raise NotImplementedError("Method unavailable for Google's Gemini models.")
