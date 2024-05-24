@@ -2,3 +2,4 @@ google-cloud-aiplatform
 tiktoken
 tokenizers>=0.7.0
 python-dotenv
+pytest-mock
