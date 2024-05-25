@@ -59,3 +59,21 @@ class ModelNotSupported(TotokenizersError):
         self.model_name = model_name
         msg = self.msg.format(model_name=model_name)
         super().__init__(msg, *args)
+
+
+class CredentialsNotFound(TotokenizersError):
+    msg = "You need to set up the credential {credential} in the .env file before using this tokenizer."
+
+    def __init__(self, credential, *args):
+        self.credential = credential
+        msg = self.msg.format(credential=credential)
+        super().__init__(msg, *args)
+
+
+class InvalidCredentials(TotokenizersError):
+    msg = "Set up valid credentials\n{error}"
+
+    def __init__(self, error, *args):
+        self.error = error
+        msg = self.msg.format(error=error)
+        super().__init__(msg, *args)

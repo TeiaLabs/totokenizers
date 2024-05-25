@@ -6,6 +6,8 @@ from .mockai.info import MODELS as MOCKAI_MODELS
 from .mockai.tokenizer import MockAITokenizer
 from .openai import OpenAITokenizer
 from .openai_info import OPEN_AI_MODELS
+from .google import GoogleTokenizer
+from .google import GOOGLE_MODELS
 
 TokenizerType = OpenAITokenizer | AnthropicTokenizer | MockAITokenizer
 
@@ -35,6 +37,11 @@ class Totokenizer:
     def from_provider(
         cls, provider: Literal["mockai"], model: str
     ) -> MockAITokenizer: ...
+    @overload
+    @classmethod
+    def from_provider(
+        cls, provider: Literal["google"], model: str
+    ) -> GoogleTokenizer: ...
 
     @classmethod
     def from_provider(cls, provider: str, model: str) -> TokenizerType:
@@ -46,6 +53,8 @@ class Totokenizer:
                 return OpenAITokenizer(model)
             case "mockai":
                 return MockAITokenizer(model)
+            case "google":
+                return GoogleTokenizer(model)
             case _:
                 raise ModelProviderNotFound(provider)
 
@@ -76,4 +85,8 @@ class TotoModelInfo:
             if model_name not in MOCKAI_MODELS:
                 raise ModelNotFound(model_name)
             return MOCKAI_MODELS[model_name]
+        if provider == "google":
+            if model_name not in GOOGLE_MODELS:
+                raise ModelNotFound(model_name)
+            return GOOGLE_MODELS[model_name]
         raise ModelProviderNotFound(provider)
