@@ -9,7 +9,7 @@ from ..schemas import (
     Chat,
 )
 import vertexai
-from vertexai.preview.generative_models import (
+from vertexai.generative_models import (
     GenerativeModel,
 )
 from google.api_core.exceptions import GoogleAPIError
