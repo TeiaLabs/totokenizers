@@ -51,7 +51,7 @@ class GoogleTokenizer:
             "gemini-1.0-pro-002",
             "gemini-pro-vision-001",
         }:
-            self.model = GenerativeModel(model_name)
+            self.model_name = model_name
             self.load_gemini()
 
         else:
@@ -71,6 +71,7 @@ class GoogleTokenizer:
                 credetials_info
             )
             vertexai.init(project=os.environ.get("project_id"), credentials=credentials)
+            self.model = GenerativeModel(self.model_name)
             self.model.count_tokens("test")
         except GoogleAPIError as e:
             raise InvalidCredentials(error=e)
