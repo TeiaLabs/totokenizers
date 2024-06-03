@@ -76,7 +76,6 @@ class OpenAITokenizer:
         }:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
-            self.tokens_fcall = 3
         elif self.model == "gpt-3.5-turbo-0301":
             self.tokens_per_message = (
                 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
