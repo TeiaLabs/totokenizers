@@ -1,5 +1,5 @@
 import logging
-from typing import Literal, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 import tiktoken
 
@@ -59,20 +59,22 @@ class OpenAITokenizer:
             "gpt-3.5-turbo-1106",
             "gpt-3.5-turbo-16k-0613",
             "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo", # points to 0125
+            "gpt-3.5-turbo",  # points to 0125
             "gpt-4-0125-preview",
             "gpt-4-0314",
             "gpt-4-0613",
             "gpt-4-1106-preview",
             "gpt-4-32k-0314",
             "gpt-4-32k-0613",
-            "gpt-4-32k", # points to 0613
+            "gpt-4-32k",  # points to 0613
             "gpt-4-turbo-2024-04-09",
             "gpt-4-turbo-preview",  # points to gpt-4-0125-preview
-            "gpt-4-turbo", # points to 2024-04-09
-            "gpt-4", # points to 0613
+            "gpt-4-turbo",  # points to 2024-04-09
+            "gpt-4",  # points to 0613
             "gpt-4o-2024-05-13",
-            "gpt-4o", # points to 2024-05-13
+            "gpt-4o",  # points to 2024-05-13
+            "gpt-4o-mini-2024-07-18",
+            "gpt-4o-mini" # points to 2024-07-18
         }:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
