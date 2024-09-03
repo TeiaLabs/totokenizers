@@ -7,7 +7,9 @@ from .errors import ModelNotFound, ModelNotSupported
 from .jsonschema_formatter import FunctionJSONSchema
 from .schemas import (
     Chat,
+    ChatImageContent,
     ChatMLMessage,
+    ChatTextContent,
     FunctionCallChatMLMessage,
     FunctionChatMLMessage,
 )
@@ -74,10 +76,11 @@ class OpenAITokenizer:
             "gpt-4o-2024-05-13",
             "gpt-4o",  # points to 2024-05-13
             "gpt-4o-mini-2024-07-18",
-            "gpt-4o-mini" # points to 2024-07-18
+            "gpt-4o-mini",  # points to 2024-07-18
         }:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
+            self.tokens_per_image = 85
         elif self.model == "gpt-3.5-turbo-0301":
             self.tokens_per_message = (
                 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
@@ -130,11 +133,27 @@ class OpenAITokenizer:
                 + 3  # I believe this is due to delimiter tokens being added
             )
         else:
-            num_tokens += self.count_tokens(message["content"]) + self.count_tokens(
-                message["role"]
-            )
+            num_tokens = self.count_content_tokens(content=message["content"])
+            num_tokens += self.count_tokens(message["role"])
             if "name" in message:
                 num_tokens += self.tokens_per_name + self.count_tokens(message["name"])
+        return num_tokens
+
+    def count_content_tokens(
+        self, content: str | list[ChatTextContent | ChatImageContent]
+    ) -> int:
+        if isinstance(content, str):
+            return self.count_tokens(content)
+
+        num_tokens = 0
+        for item in content:
+            match item:
+                case {"type": "text"}:
+                    num_tokens += self.count_tokens(item["text"])
+                case {"type": "image_url"}:
+                    num_tokens += self.tokens_per_image
+                case _:
+                    raise TypeError(f"Unknown content type: {type(item)}")
         return num_tokens
 
     def count_functions_tokens(self, functions: list[dict]) -> int:
