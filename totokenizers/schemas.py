@@ -19,7 +19,7 @@ class ChatImageContent(TypedDict):
 class ChatMLMessage(TypedDict):
     content: str | list[ChatTextContent | ChatImageContent]
     name: NotRequired[str]
-    role: Literal["user", "assistant", "system"]
+    role: Literal["user", "assistant", "system", "model"]
 
 
 class FunctionCall(TypedDict):
