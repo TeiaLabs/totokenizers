@@ -133,7 +133,7 @@ class OpenAITokenizer:
                 + 3  # I believe this is due to delimiter tokens being added
             )
         else:
-            num_tokens = self.count_content_tokens(content=message["content"])
+            num_tokens += self.count_content_tokens(content=message["content"])
             num_tokens += self.count_tokens(message["role"])
             if "name" in message:
                 num_tokens += self.tokens_per_name + self.count_tokens(message["name"])
