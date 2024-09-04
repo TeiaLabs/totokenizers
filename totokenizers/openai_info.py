@@ -206,7 +206,7 @@ chat_model_mapping = {
     "gpt-4-turbo": "gpt-4-turbo-2024-04-09",
     "gpt-4-32k": "gpt-4-32k-0613",
     "gpt-4o": "gpt-4o-2024-05-13",
-    "gpt-4o-mini": "gpt-4o-mini-2024-07-18"
+    "gpt-4o-mini": "gpt-4o-mini-2024-07-18",
 }
 for alias, target in chat_model_mapping.items():
     alias_info = ChatModelInfo(**OPEN_AI_CHAT_MODELS[target].__dict__)
