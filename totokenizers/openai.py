@@ -36,7 +36,10 @@ class OpenAITokenizer:
     ):
         self.model = model_name
         try:
-            self.encoder = tiktoken.encoding_for_model(model_name)
+            if model_name == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB":
+                self.encoder = tiktoken.encoding_for_model("gpt-4o")
+            else:
+                self.encoder = tiktoken.encoding_for_model(model_name)
         except KeyError:
             raise ModelNotFound(model_name)
         self._init_model_params()
@@ -77,6 +80,7 @@ class OpenAITokenizer:
             "gpt-4o",  # points to 2024-05-13
             "gpt-4o-mini-2024-07-18",
             "gpt-4o-mini",  # points to 2024-07-18
+            "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB",
         }:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
