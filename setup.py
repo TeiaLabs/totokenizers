@@ -49,7 +49,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/TeiaLabs/totokenizers",
     packages=setuptools.find_packages(),
-    python_requires=">=3.11",
+    python_requires=">=3.12",
     install_requires=requirements,
     extras_require=extra_requirements,
     package_data={"": ["*.json"]},
