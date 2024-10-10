@@ -138,6 +138,13 @@ class OpenAITokenizer:
                 + self.count_tokens(message.name)
                 + self.count_tokens(message.role)
             )
+        elif message["role"] == "function":
+            num_tokens += (
+                self.count_tokens(message["content"])
+                + self.count_tokens(message["name"])
+                + self.count_tokens(message["role"])
+                - 1  # omission of a delimiter?
+            )
         elif "function_call" in message:
             # https://github.com/forestwanglin/openai-java/blob/308a3423d34905bd28aca976fd0f2fa030f9a3a1/jtokkit/src/main/java/xyz/felh/openai/jtokkit/utils/TikTokenUtils.java#L202-L205
             num_tokens += (
