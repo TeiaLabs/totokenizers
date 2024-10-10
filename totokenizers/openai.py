@@ -1,5 +1,5 @@
 import logging
-from typing import Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence, overload
 
 import tiktoken
 
@@ -12,6 +12,9 @@ from .schemas import (
     ChatTextContent,
     FunctionCallChatMLMessage,
     FunctionChatMLMessage,
+    Tool,
+    ToolCallMLMessage,
+    ToolMLMessage,
 )
 
 logger = logging.getLogger("totokenizers")
@@ -36,7 +39,10 @@ class OpenAITokenizer:
     ):
         self.model = model_name
         try:
-            if model_name == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB":
+            if (
+                model_name
+                == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB"
+            ):
                 self.encoder = tiktoken.encoding_for_model("gpt-4o")
             else:
                 self.encoder = tiktoken.encoding_for_model(model_name)
@@ -53,9 +59,9 @@ class OpenAITokenizer:
             "text-davinci-003",
             "gpt-3.5-turbo-instruct",
         ):
-            self.count_chatml_tokens = NotImplementedError
-            self.count_functions_tokens = NotImplementedError
-            self.count_message_tokens = NotImplementedError
+            self.count_chatml_tokens = NotImplementedError  # type: ignore
+            self.count_functions_tokens = NotImplementedError  # type: ignore
+            self.count_message_tokens = NotImplementedError  # type: ignore
             return
 
         if self.model in {
@@ -164,3 +170,100 @@ class OpenAITokenizer:
         num_tokens = len(self.encode(self.funcion_header))
         num_tokens += len(self.encode(FunctionJSONSchema(functions).to_typescript()))
         return num_tokens
+
+    def count_tools_tokens(self, message: ToolMLMessage) -> int:
+        """Count tokens for a ToolMLMessage."""
+        num_tokens = self.tokens_per_message
+        num_tokens += self.count_tokens(message["content"])
+        num_tokens += self.count_tokens(message["role"])
+        if "name" in message:
+            num_tokens += self.tokens_per_name + self.count_tokens(message["name"])
+        return num_tokens
+
+    def count_tool_call_tokens(self, message: ToolCallMLMessage) -> int:
+        """Count tokens for a ToolCallMLMessage."""
+        num_tokens = self.tokens_per_message
+        for tool_call in message["tool_calls"]:
+            num_tokens += self.count_tokens(tool_call["function"]["name"])
+            num_tokens += self.count_tokens(tool_call["function"]["arguments"])
+            num_tokens += self.tokens_per_message  # Add tokens for each tool call
+        num_tokens += self.count_tokens(message["role"])
+        return num_tokens
+
+    def num_tokens_for_tools(self, tools: Sequence[Tool], model: str) -> int:
+        if "openai/" in model:
+            model = model.split("/")[-1]
+
+        """Calculate the total number of tokens for tools and messages."""
+        # Initialize function settings to 0
+        func_init = 0
+        prop_init = 0
+        prop_key = 0
+        enum_init = 0
+        enum_item = 0
+        func_end = 0
+
+        if model in ["gpt-4o", "gpt-4o-mini"]:
+            # Set function settings for the above models
+            func_init = 7
+            prop_init = 3
+            prop_key = 3
+            enum_init = -3
+            enum_item = 3
+            func_end = 12
+        elif model in ["gpt-3.5-turbo", "gpt-4"]:
+            # Set function settings for the above models
+            func_init = 10
+            prop_init = 3
+            prop_key = 3
+            enum_init = -3
+            enum_item = 3
+            func_end = 12
+        else:
+            raise NotImplementedError(
+                f"num_tokens_for_tools() is not implemented for model {model}."
+            )
+
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except KeyError:
+            print("Warning: model not found. Using o200k_base encoding.")
+            encoding = tiktoken.get_encoding("o200k_base")
+
+        func_token_count = 0
+        for tool in tools:
+            if tool.content is not None:  # is ToolMLMessage
+                func_token_count += self.count_tokens(tool.content)
+                if "name" in tool:
+                    func_token_count += self.count_tokens(tool.name)
+            # else:  # is ToolCallMLMessage
+            #     for call in tool.get("tool_calls"):  # type: ignore TODO
+            #         func_token_count += (
+            #             func_init  # Add tokens for start of each function
+            #         )
+            #         function = call.get("function")
+            #         f_name = function.get("name")
+            #         f_args = function.get("arguments")
+            #         line = f"{f_name}:{f_args}"
+            #         func_token_count += len(
+            #             encoding.encode(line)
+            #         )  # Add tokens for function name and arguments
+
+            #         # Example of using prop_init, prop_key, enum_init, enum_item
+            #         # Assuming function["parameters"] is a dict with properties
+            #         if "arguments" in function:
+            #             func_token_count += prop_init
+            #             for key, prop in function.get("arguments"):
+            #                 func_token_count += prop_key
+            #                 p_name = key
+            #                 p_type = prop.get({"type", ""})
+            #                 p_desc = prop.get("description", "")
+            #                 line = f"{p_name}:{p_type}:{p_desc}"
+            #                 func_token_count += len(encoding.encode(line))
+            #                 if "enum" in prop:
+            #                     func_token_count += enum_init
+            #                     for item in prop["enum"]:
+            #                         func_token_count += enum_item
+            #                         func_token_count += len(encoding.encode(item))
+
+        return func_token_count + func_end
