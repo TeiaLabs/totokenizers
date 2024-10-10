@@ -1,4 +1,3 @@
 google-cloud-aiplatform
 tiktoken
 tokenizers>=0.7.0
-melting-schemas==3.2.1

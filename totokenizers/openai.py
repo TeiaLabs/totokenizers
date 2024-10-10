@@ -2,7 +2,6 @@ import logging
 from typing import Mapping, Optional, Sequence
 
 import tiktoken
-from melting_schemas.completion.buffered_ml_messages import ToolMLMessage
 
 from .errors import ModelNotFound, ModelNotSupported
 from .jsonschema_formatter import FunctionJSONSchema
@@ -37,10 +36,7 @@ class OpenAITokenizer:
     ):
         self.model = model_name
         try:
-            if (
-                model_name
-                == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB"
-            ):
+            if model_name == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB":
                 self.encoder = tiktoken.encoding_for_model("gpt-4o")
             else:
                 self.encoder = tiktoken.encoding_for_model(model_name)
@@ -57,9 +53,9 @@ class OpenAITokenizer:
             "text-davinci-003",
             "gpt-3.5-turbo-instruct",
         ):
-            self.count_chatml_tokens = NotImplementedError  # type: ignore
-            self.count_functions_tokens = NotImplementedError  # type: ignore
-            self.count_message_tokens = NotImplementedError  # type: ignore
+            self.count_chatml_tokens = NotImplementedError
+            self.count_functions_tokens = NotImplementedError
+            self.count_message_tokens = NotImplementedError
             return
 
         if self.model in {
@@ -104,39 +100,31 @@ class OpenAITokenizer:
         return len(self.encode(text))
 
     def count_chatml_tokens(
-        self,
-        messages: Chat | Sequence[ToolMLMessage],
-        functions: Optional[Sequence[Mapping]] = None,
+        self, messages: Chat, functions: Optional[Sequence[Mapping]] = None
     ) -> int:
         num_tokens = sum(map(self.count_message_tokens, messages))
         num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
         if functions:
-            if not isinstance(messages[0], ToolMLMessage):
-                if messages[0]["role"] == "system":
-                    num_tokens -= (
-                        1  # I believe a newline gets removed somewhere for somereason
-                    )
-                else:
-                    num_tokens += self.tokens_per_message
+            if messages[0]["role"] == "system":
+                num_tokens -= (
+                    1  # I believe a newline gets removed somewhere for somereason
+                )
+            else:
+                num_tokens += self.tokens_per_message
             num_tokens += self.count_functions_tokens(functions)
         return num_tokens
 
     def count_message_tokens(
-        self,
-        message: ChatMLMessage
-        | FunctionCallChatMLMessage
-        | FunctionChatMLMessage
-        | ToolMLMessage,
+        self, message: ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage
     ) -> int:
         """https://github.com/openai/openai-python/blob/main/chatml.md"""
         num_tokens = self.tokens_per_message
-
-        if isinstance(message, ToolMLMessage):
+        if message["role"] == "function":
             num_tokens += (
-                self.count_tokens(message.tool_id)
-                + self.count_tokens(message.content)
-                + self.count_tokens(message.name)
-                + self.count_tokens(message.role)
+                self.count_tokens(message["content"])
+                + self.count_tokens(message["name"])
+                + self.count_tokens(message["role"])
+                - 1  # omission of a delimiter?
             )
         elif message["role"] == "function":
             num_tokens += (
