@@ -1,5 +1,5 @@
 import logging
-from typing import Mapping, Optional, Sequence, overload
+from typing import Mapping, Optional, Sequence
 
 import tiktoken
 
@@ -13,8 +13,6 @@ from .schemas import (
     FunctionCallChatMLMessage,
     FunctionChatMLMessage,
     Tool,
-    ToolCallMLMessage,
-    ToolMLMessage,
 )
 
 logger = logging.getLogger("totokenizers")
@@ -171,31 +169,12 @@ class OpenAITokenizer:
         num_tokens += len(self.encode(FunctionJSONSchema(functions).to_typescript()))
         return num_tokens
 
-    def count_tools_tokens(self, message: ToolMLMessage) -> int:
-        """Count tokens for a ToolMLMessage."""
-        num_tokens = self.tokens_per_message
-        num_tokens += self.count_tokens(message["content"])
-        num_tokens += self.count_tokens(message["role"])
-        if "name" in message:
-            num_tokens += self.tokens_per_name + self.count_tokens(message["name"])
-        return num_tokens
-
-    def count_tool_call_tokens(self, message: ToolCallMLMessage) -> int:
-        """Count tokens for a ToolCallMLMessage."""
-        num_tokens = self.tokens_per_message
-        for tool_call in message["tool_calls"]:
-            num_tokens += self.count_tokens(tool_call["function"]["name"])
-            num_tokens += self.count_tokens(tool_call["function"]["arguments"])
-            num_tokens += self.tokens_per_message  # Add tokens for each tool call
-        num_tokens += self.count_tokens(message["role"])
-        return num_tokens
-
-    def num_tokens_for_tools(self, tools: Sequence[Tool], model: str) -> int:
+    def num_tokens_for_tools(self, tools: Tool) -> int:
+        model = self.model
         if "openai/" in model:
             model = model.split("/")[-1]
 
         """Calculate the total number of tokens for tools and messages."""
-        # Initialize function settings to 0
         func_init = 0
         prop_init = 0
         prop_key = 0
@@ -204,7 +183,6 @@ class OpenAITokenizer:
         func_end = 0
 
         if model in ["gpt-4o", "gpt-4o-mini"]:
-            # Set function settings for the above models
             func_init = 7
             prop_init = 3
             prop_key = 3
@@ -212,7 +190,6 @@ class OpenAITokenizer:
             enum_item = 3
             func_end = 12
         elif model in ["gpt-3.5-turbo", "gpt-4"]:
-            # Set function settings for the above models
             func_init = 10
             prop_init = 3
             prop_key = 3
@@ -232,38 +209,34 @@ class OpenAITokenizer:
 
         func_token_count = 0
         for tool in tools:
-            if tool.content is not None:  # is ToolMLMessage
-                func_token_count += self.count_tokens(tool.content)
+            if tool["content"] is not None:  # is ToolMLMessage         # type:ignore
+                func_token_count += self.count_tokens(tool["content"])  # type:ignore
                 if "name" in tool:
-                    func_token_count += self.count_tokens(tool.name)
-            # else:  # is ToolCallMLMessage
-            #     for call in tool.get("tool_calls"):  # type: ignore TODO
-            #         func_token_count += (
-            #             func_init  # Add tokens for start of each function
-            #         )
-            #         function = call.get("function")
-            #         f_name = function.get("name")
-            #         f_args = function.get("arguments")
-            #         line = f"{f_name}:{f_args}"
-            #         func_token_count += len(
-            #             encoding.encode(line)
-            #         )  # Add tokens for function name and arguments
+                    func_token_count += self.count_tokens(tool["name"])  # type:ignore
+            else:  # is ToolCallMLMessage
+                for call in tool["tool_calls"]:  # type:ignore
+                    func_token_count += (
+                        func_init  # Add tokens for start of each function
+                    )
+                    function = call["function"]
+                    f_name = function["name"]
+                    f_args = function["arguments"]
+                    line = f"{f_name}:{f_args}"
 
-            #         # Example of using prop_init, prop_key, enum_init, enum_item
-            #         # Assuming function["parameters"] is a dict with properties
-            #         if "arguments" in function:
-            #             func_token_count += prop_init
-            #             for key, prop in function.get("arguments"):
-            #                 func_token_count += prop_key
-            #                 p_name = key
-            #                 p_type = prop.get({"type", ""})
-            #                 p_desc = prop.get("description", "")
-            #                 line = f"{p_name}:{p_type}:{p_desc}"
-            #                 func_token_count += len(encoding.encode(line))
-            #                 if "enum" in prop:
-            #                     func_token_count += enum_init
-            #                     for item in prop["enum"]:
-            #                         func_token_count += enum_item
-            #                         func_token_count += len(encoding.encode(item))
+                    func_token_count += len(
+                        encoding.encode(line)
+                    )  # Add tokens for function name and arguments
+
+                    try:
+                        for arg in function["arguments"].split(","):
+                            key, prop = arg.split(":")
+                            func_token_count += prop_key
+                            func_token_count += len(encoding.encode(prop))
+                            if "enum" in prop:
+                                func_token_count += enum_init
+                                func_token_count += enum_item
+                        func_token_count += prop_init
+                    except ValueError:
+                        pass  # No arguments
 
         return func_token_count + func_end
