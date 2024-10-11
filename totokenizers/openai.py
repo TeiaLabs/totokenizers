@@ -169,7 +169,7 @@ class OpenAITokenizer:
         num_tokens += len(self.encode(FunctionJSONSchema(functions).to_typescript()))
         return num_tokens
 
-    def cont_tools_tokens(self, tools: Tool) -> int:
+    def count_tools_tokens(self, tools: Tool) -> int:
         model = self.model
         if "openai/" in model:
             model = model.split("/")[-1]
@@ -197,14 +197,15 @@ class OpenAITokenizer:
             enum_item = 3
             func_end = 12
         else:
+            logger.error(f"count_tools_tokens() is not implemented for model {model}.")
             raise NotImplementedError(
-                f"num_tokens_for_tools() is not implemented for model {model}."
+                f"count_tools_tokens() is not implemented for model {model}."
             )
 
         try:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
-            print("Warning: model not found. Using o200k_base encoding.")
+            logger.warning(f"Model {model} not found. Using o200k_base encoding.")
             encoding = tiktoken.get_encoding("o200k_base")
 
         func_token_count = 0
