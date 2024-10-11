@@ -12,6 +12,7 @@ from .schemas import (
     ChatTextContent,
     FunctionCallChatMLMessage,
     FunctionChatMLMessage,
+    Tool,
 )
 
 logger = logging.getLogger("totokenizers")
@@ -36,7 +37,10 @@ class OpenAITokenizer:
     ):
         self.model = model_name
         try:
-            if model_name == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB":
+            if (
+                model_name
+                == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB"
+            ):
                 self.encoder = tiktoken.encoding_for_model("gpt-4o")
             else:
                 self.encoder = tiktoken.encoding_for_model(model_name)
@@ -53,9 +57,9 @@ class OpenAITokenizer:
             "text-davinci-003",
             "gpt-3.5-turbo-instruct",
         ):
-            self.count_chatml_tokens = NotImplementedError
-            self.count_functions_tokens = NotImplementedError
-            self.count_message_tokens = NotImplementedError
+            self.count_chatml_tokens = NotImplementedError  # type: ignore
+            self.count_functions_tokens = NotImplementedError  # type: ignore
+            self.count_message_tokens = NotImplementedError  # type: ignore
             return
 
         if self.model in {
@@ -164,3 +168,76 @@ class OpenAITokenizer:
         num_tokens = len(self.encode(self.funcion_header))
         num_tokens += len(self.encode(FunctionJSONSchema(functions).to_typescript()))
         return num_tokens
+
+    def count_tools_tokens(self, tools: Tool) -> int:
+        model = self.model
+        if "openai/" in model:
+            model = model.split("/")[-1]
+
+        """Calculate the total number of tokens for tools and messages."""
+        func_init = 0
+        prop_init = 0
+        prop_key = 0
+        enum_init = 0
+        enum_item = 0
+        func_end = 0
+
+        if model in ["gpt-4o", "gpt-4o-mini"]:
+            func_init = 7
+            prop_init = 3
+            prop_key = 3
+            enum_init = -3
+            enum_item = 3
+            func_end = 12
+        elif model in ["gpt-3.5-turbo", "gpt-4"]:
+            func_init = 10
+            prop_init = 3
+            prop_key = 3
+            enum_init = -3
+            enum_item = 3
+            func_end = 12
+        else:
+            logger.error(f"count_tools_tokens() is not implemented for model {model}.")
+            raise NotImplementedError(
+                f"count_tools_tokens() is not implemented for model {model}."
+            )
+
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except KeyError:
+            logger.warning(f"Model {model} not found. Using o200k_base encoding.")
+            encoding = tiktoken.get_encoding("o200k_base")
+
+        func_token_count = 0
+        for tool in tools:
+            if tool["content"] is not None:  # is ToolMLMessage         # type:ignore
+                func_token_count += self.count_tokens(tool["content"])  # type:ignore
+                if "name" in tool:
+                    func_token_count += self.count_tokens(tool["name"])  # type:ignore
+            else:  # is ToolCallMLMessage
+                for call in tool["tool_calls"]:  # type:ignore
+                    func_token_count += (
+                        func_init  # Add tokens for start of each function
+                    )
+                    function = call["function"]
+                    f_name = function["name"]
+                    f_args = function["arguments"]
+                    line = f"{f_name}:{f_args}"
+
+                    func_token_count += len(
+                        encoding.encode(line)
+                    )  # Add tokens for function name and arguments
+
+                    try:
+                        for arg in function["arguments"].split(","):
+                            key, prop = arg.split(":")
+                            func_token_count += prop_key
+                            func_token_count += len(encoding.encode(prop))
+                            if "enum" in prop:
+                                func_token_count += enum_init
+                                func_token_count += enum_item
+                        func_token_count += prop_init
+                    except ValueError:
+                        pass  # No arguments
+
+        return func_token_count + func_end

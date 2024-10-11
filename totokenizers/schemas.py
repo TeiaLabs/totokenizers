@@ -39,4 +39,27 @@ class FunctionChatMLMessage(TypedDict):
     role: Literal["function"]
 
 
+class ToolCallFunction(TypedDict):
+    arguments: str
+    name: str
+
+
+class ToolCall(TypedDict):
+    type: Literal["function"]
+    function: ToolCallFunction
+
+
+class ToolCallMLMessage(TypedDict):
+    content: None
+    tool_calls: list[ToolCall]
+    role: Literal["assistant"]
+
+
+class ToolMLMessage(TypedDict):
+    content: str
+    name: str
+    role: Literal["tool"]
+
+
 Chat = Sequence[ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage]
+Tool = Sequence[ToolMLMessage | ToolCallMLMessage]
