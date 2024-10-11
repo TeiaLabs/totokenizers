@@ -169,7 +169,7 @@ class OpenAITokenizer:
         num_tokens += len(self.encode(FunctionJSONSchema(functions).to_typescript()))
         return num_tokens
 
-    def num_tokens_for_tools(self, tools: Tool) -> int:
+    def cont_tools_tokens(self, tools: Tool) -> int:
         model = self.model
         if "openai/" in model:
             model = model.split("/")[-1]

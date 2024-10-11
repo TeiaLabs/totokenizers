@@ -109,15 +109,15 @@ def test_gpp4_o(chatml_messages):
 def test_gpt4_o_tools(tool_mlmessage):
     tokenizer = OpenAITokenizer(model_name="gpt-4o")
 
-    count_tokens = tokenizer.num_tokens_for_tools(tool_mlmessage)
+    count_tokens = tokenizer.cont_tools_tokens(tool_mlmessage)
     assert count_tokens == 37
 
 
 def test_gpt4_o_tool_call(tool_call_message, tool_call_message_no_args):
     tokenizer = OpenAITokenizer(model_name="gpt-4o")
 
-    count_tokens = tokenizer.num_tokens_for_tools(tool_call_message)
+    count_tokens = tokenizer.cont_tools_tokens(tool_call_message)
     assert count_tokens == 88
 
-    count_tokens = tokenizer.num_tokens_for_tools(tool_call_message_no_args)
+    count_tokens = tokenizer.cont_tools_tokens(tool_call_message_no_args)
     assert count_tokens == 22
