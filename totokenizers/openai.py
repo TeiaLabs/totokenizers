@@ -13,6 +13,8 @@ from .schemas import (
     FunctionCallChatMLMessage,
     FunctionChatMLMessage,
     Tool,
+    ToolCallMLMessage,
+    ToolMLMessage,
 )
 
 logger = logging.getLogger("totokenizers")
@@ -119,7 +121,12 @@ class OpenAITokenizer:
         return num_tokens
 
     def count_message_tokens(
-        self, message: ChatMLMessage | FunctionCallChatMLMessage | FunctionChatMLMessage
+        self,
+        message: ChatMLMessage
+        | FunctionCallChatMLMessage
+        | FunctionChatMLMessage
+        | ToolMLMessage
+        | ToolCallMLMessage,
     ) -> int:
         """https://github.com/openai/openai-python/blob/main/chatml.md"""
         num_tokens = self.tokens_per_message
@@ -140,6 +147,8 @@ class OpenAITokenizer:
                 + self.count_tokens(message["role"])
                 + 3  # I believe this is due to delimiter tokens being added
             )
+        elif "tool_calls" in message:
+            num_tokens += self.count_tools_tokens([message])
         else:
             num_tokens += self.count_content_tokens(content=message["content"])
             num_tokens += self.count_tokens(message["role"])
@@ -170,11 +179,11 @@ class OpenAITokenizer:
         return num_tokens
 
     def count_tools_tokens(self, tools: Tool) -> int:
+        """Calculate the total number of tokens for tools and messages."""
         model = self.model
-        if "openai/" in model:
+        if model.startswith("openai/"):
             model = model.split("/")[-1]
 
-        """Calculate the total number of tokens for tools and messages."""
         func_init = 0
         func_end = 0
 
@@ -193,22 +202,21 @@ class OpenAITokenizer:
 
         func_token_count = 0
         for tool in tools:
-            if tool["content"] is not None:  # is ToolMLMessage         # type:ignore
-                func_token_count += self.count_tokens(tool["content"])  # type:ignore
-                if "name" in tool:
-                    func_token_count += self.count_tokens(tool["name"])  # type:ignore
-            else:  # is ToolCallMLMessage
-                for call in tool["tool_calls"]:  # type:ignore
-                    func_token_count += (
-                        func_init  # Add tokens for start of each function
-                    )
+            if content := tool.get("content"):
+                # Since message has a "content" it will be considered a ToolMLMessage
+                func_token_count += self.count_tokens(content)
+                if name := tool.get("name"):
+                    func_token_count += self.count_tokens(name)
+            elif tool_calls := tool.get("tool_calls"):
+                # Since message has a "tool_calls" it will be considered a ToolCallMLMessage
+                for call in tool_calls:
+                    # Add tokens for start of each function
+                    func_token_count += func_init
                     function = call["function"]
                     f_name = function["name"]
                     f_args = function["arguments"]
                     line = f"{f_name}:{f_args}"
 
-                    func_token_count += len(
-                        encoding.encode(line)
-                    )  # Add tokens for function name and arguments
+                    func_token_count += len(encoding.encode(line))
 
         return func_token_count + func_end
