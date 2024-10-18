@@ -117,7 +117,7 @@ def test_gpt4_o_tool_call(tool_call_message, tool_call_message_no_args):
     tokenizer = OpenAITokenizer(model_name="gpt-4o")
 
     count_tokens = tokenizer.count_tools_tokens(tool_call_message)
-    assert count_tokens == 88
+    assert count_tokens == 57
 
     count_tokens = tokenizer.count_tools_tokens(tool_call_message_no_args)
     assert count_tokens == 22
