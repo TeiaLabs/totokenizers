@@ -176,31 +176,14 @@ class OpenAITokenizer:
 
         """Calculate the total number of tokens for tools and messages."""
         func_init = 0
-        prop_init = 0
-        prop_key = 0
-        enum_init = 0
-        enum_item = 0
         func_end = 0
 
-        if model in ["gpt-4o", "gpt-4o-mini"]:
-            func_init = 7
-            prop_init = 3
-            prop_key = 3
-            enum_init = -3
-            enum_item = 3
-            func_end = 12
-        elif model in ["gpt-3.5-turbo", "gpt-4"]:
+        if model in ["gpt-3.5-turbo", "gpt-4"]:
             func_init = 10
-            prop_init = 3
-            prop_key = 3
-            enum_init = -3
-            enum_item = 3
             func_end = 12
         else:
-            logger.error(f"count_tools_tokens() is not implemented for model {model}.")
-            raise NotImplementedError(
-                f"count_tools_tokens() is not implemented for model {model}."
-            )
+            func_init = 7
+            func_end = 12
 
         try:
             encoding = tiktoken.encoding_for_model(model)
@@ -227,17 +210,5 @@ class OpenAITokenizer:
                     func_token_count += len(
                         encoding.encode(line)
                     )  # Add tokens for function name and arguments
-
-                    try:
-                        for arg in function["arguments"].split(","):
-                            key, prop = arg.split(":")
-                            func_token_count += prop_key
-                            func_token_count += len(encoding.encode(prop))
-                            if "enum" in prop:
-                                func_token_count += enum_init
-                                func_token_count += enum_item
-                        func_token_count += prop_init
-                    except ValueError:
-                        pass  # No arguments
 
         return func_token_count + func_end
