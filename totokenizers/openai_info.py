@@ -8,6 +8,24 @@ OPEN_AI_CHAT_MODELS = {
     info.name: info
     for info in [
         ChatModelInfo(
+            completion_token_cost=0.0044,
+            cutoff="2023-10-01",
+            feature_flags=["functions", "tools", "json", "vision"],
+            max_output_tokens=100_000,
+            max_tokens=200_000,
+            name="o1-mini-2024-09-12",
+            prompt_token_cost=0.0011,
+        ),
+        ChatModelInfo(
+            completion_token_cost=0.0044,
+            cutoff="2023-10-01",
+            feature_flags=["functions", "tools", "json", "vision"],
+            max_output_tokens=100_000,
+            max_tokens=200_000,
+            name="o3-mini-2025-01-31",
+            prompt_token_cost=0.0011,
+        ),
+        ChatModelInfo(
             completion_token_cost=0.0006,
             cutoff="2023-10-01",
             feature_flags=["functions", "tools", "json", "vision", "voice"],
@@ -216,6 +234,8 @@ chat_model_mapping = {
     "gpt-4-32k": "gpt-4-32k-0613",
     "gpt-4o": "gpt-4o-2024-05-13",
     "gpt-4o-mini": "gpt-4o-mini-2024-07-18",
+    "o1-mini": "o1-mini-2024-09-12",
+    "o3-mini": "o3-mini-2025-01-31",
 }
 for alias, target in chat_model_mapping.items():
     alias_info = ChatModelInfo(**OPEN_AI_CHAT_MODELS[target].__dict__)

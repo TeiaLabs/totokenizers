@@ -87,6 +87,10 @@ class OpenAITokenizer:
             "gpt-4o-mini-2024-07-18",
             "gpt-4o-mini",  # points to 2024-07-18
             "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB",
+            "o1-mini",
+            "o1-mini-2024-09-12",
+            "o3-mini",
+            "o3-mini-2025-01-31",
         }:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
