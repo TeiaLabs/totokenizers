@@ -64,44 +64,15 @@ class OpenAITokenizer:
             self.count_message_tokens = NotImplementedError  # type: ignore
             return
 
-        if self.model in {
-            "gpt-3.5-turbo-0125",
-            "gpt-3.5-turbo-0613",
-            "gpt-3.5-turbo-1106",
-            "gpt-3.5-turbo-16k-0613",
-            "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo",  # points to 0125
-            "gpt-4-0125-preview",
-            "gpt-4-0314",
-            "gpt-4-0613",
-            "gpt-4-1106-preview",
-            "gpt-4-32k-0314",
-            "gpt-4-32k-0613",
-            "gpt-4-32k",  # points to 0613
-            "gpt-4-turbo-2024-04-09",
-            "gpt-4-turbo-preview",  # points to gpt-4-0125-preview
-            "gpt-4-turbo",  # points to 2024-04-09
-            "gpt-4",  # points to 0613
-            "gpt-4o-2024-05-13",
-            "gpt-4o",  # points to 2024-05-13
-            "gpt-4o-mini-2024-07-18",
-            "gpt-4o-mini",  # points to 2024-07-18
-            "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB",
-            "o1-mini",
-            "o1-mini-2024-09-12",
-            "o3-mini",
-            "o3-mini-2025-01-31",
-        }:
-            self.tokens_per_message = 3
-            self.tokens_per_name = 1
-            self.tokens_per_image = 85
-        elif self.model == "gpt-3.5-turbo-0301":
+        if self.model == "gpt-3.5-turbo-0301":
             self.tokens_per_message = (
                 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
             )
             self.tokens_per_name = -1  # if there's a name, the role is omitted
         else:
-            raise ModelNotSupported(self.model)
+            self.tokens_per_message = 3
+            self.tokens_per_name = 1
+            self.tokens_per_image = 85
 
     def encode(self, text: str) -> list[int]:
         return self.encoder.encode(text)
