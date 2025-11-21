@@ -54,6 +54,15 @@ OPEN_AI_CHAT_MODELS = {
         ),
         ChatModelInfo(
             completion_token_cost=0.0044,
+            cutoff="2024-09-30",
+            feature_flags=["functions", "tools", "json", "vision"],
+            max_output_tokens=16_384,
+            max_tokens=128_000,
+            name="gpt-5.1-chat-latest",
+            prompt_token_cost=0.0011,
+        ),
+        ChatModelInfo(
+            completion_token_cost=0.0044,
             cutoff="2024-05-31",
             feature_flags=["functions", "tools", "json", "vision"],
             max_output_tokens=100_000,

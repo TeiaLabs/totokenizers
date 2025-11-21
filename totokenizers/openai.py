@@ -162,7 +162,7 @@ class OpenAITokenizer:
         func_init = 0
         func_end = 0
 
-        if model in ["gpt-3.5-turbo", "gpt-4"]:
+        if model in ["gpt-3.5-turbo", "gpt-4", "gpt-5.1-chat-latest"]:
             func_init = 10
             func_end = 12
         else:
