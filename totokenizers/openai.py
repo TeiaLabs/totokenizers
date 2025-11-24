@@ -44,6 +44,9 @@ class OpenAITokenizer:
                 == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB"
             ):
                 self.encoder = tiktoken.encoding_for_model("gpt-4o")
+            # this includes gpt-5.1 as well
+            elif "gpt-5" in model_name:
+                self.encoder = tiktoken.encoding_for_model("gpt-5")
             else:
                 self.encoder = tiktoken.encoding_for_model(model_name)
         except KeyError:
