@@ -121,3 +121,11 @@ def test_gpt4_o_tool_call(tool_call_message, tool_call_message_no_args):
 
     count_tokens = tokenizer.count_tools_tokens(tool_call_message_no_args)
     assert count_tokens == 22
+
+
+def test_gpt_5_2_chat_latest(chatml_messages):
+    tokenizer = OpenAITokenizer(model_name="gpt-5.2-chat-latest")
+
+    assert tokenizer.encoder.name == "o200k_base"
+    assert tokenizer.count_chatml_tokens(chatml_messages) == 34
+    assert tokenizer.count_tokens("hello world") == 2
