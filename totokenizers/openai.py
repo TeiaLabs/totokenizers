@@ -19,6 +19,26 @@ from .schemas import (
 
 logger = logging.getLogger("totokenizers")
 
+O200K_FALLBACK_PREFIXES = (
+    "ft:gpt-4o",
+    "gpt-4.1",
+    "gpt-4o",
+    "gpt-5",
+    "o1",
+    "o3",
+    "o4",
+)
+
+
+def _normalize_model_name(model_name: str) -> str:
+    if model_name.startswith("openai/"):
+        return model_name.split("/", 1)[-1]
+    return model_name
+
+
+def _uses_o200k_fallback(model_name: str) -> bool:
+    return model_name.startswith(O200K_FALLBACK_PREFIXES)
+
 
 class OpenAITokenizer:
     funcion_header = "\n".join(
@@ -37,20 +57,20 @@ class OpenAITokenizer:
         self,
         model_name: str,
     ):
-        self.model = model_name
+        self.model = _normalize_model_name(model_name)
         try:
-            if (
-                model_name
-                == "ft:gpt-4o-2024-08-06:osf-digital:revenue-cloud-4o:A5s5vXgB"
-            ):
-                self.encoder = tiktoken.encoding_for_model("gpt-4o")
-            # this includes gpt-5.1 as well
-            elif "gpt-5" in model_name:
-                self.encoder = tiktoken.encoding_for_model("gpt-5")
-            else:
-                self.encoder = tiktoken.encoding_for_model(model_name)
+            try:
+                self.encoder = tiktoken.encoding_for_model(self.model)
+            except KeyError:
+                if self.model.startswith("gpt-5"):
+                    self.encoder = tiktoken.encoding_for_model("gpt-5")
+                else:
+                    raise
         except KeyError:
-            raise ModelNotFound(model_name)
+            if _uses_o200k_fallback(self.model):
+                self.encoder = tiktoken.get_encoding("o200k_base")
+            else:
+                raise ModelNotFound(model_name)
         self._init_model_params()
 
     def _init_model_params(self):
@@ -159,13 +179,13 @@ class OpenAITokenizer:
     def count_tools_tokens(self, tools: Tool) -> int:
         """Calculate the total number of tokens for tools and messages."""
         model = self.model
-        if model.startswith("openai/"):
-            model = model.split("/")[-1]
 
-        func_init = 0
-        func_end = 0
-
-        if model in ["gpt-3.5-turbo", "gpt-4", "gpt-5.1-chat-latest"]:
+        if model in [
+            "gpt-3.5-turbo",
+            "gpt-4",
+            "gpt-5.1-chat-latest",
+            "gpt-5.2-chat-latest",
+        ]:
             func_init = 10
             func_end = 12
         else:
