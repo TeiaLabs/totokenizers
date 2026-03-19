@@ -129,3 +129,11 @@ def test_gpt_5_2_chat_latest(chatml_messages):
     assert tokenizer.encoder.name == "o200k_base"
     assert tokenizer.count_chatml_tokens(chatml_messages) == 34
     assert tokenizer.count_tokens("hello world") == 2
+
+
+def test_gpt_5_3_chat_latest(chatml_messages):
+    tokenizer = OpenAITokenizer(model_name="gpt-5.3-chat-latest")
+
+    assert tokenizer.encoder.name == "o200k_base"
+    assert tokenizer.count_chatml_tokens(chatml_messages) == 34
+    assert tokenizer.count_tokens("hello world") == 2

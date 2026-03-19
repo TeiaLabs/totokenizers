@@ -185,6 +185,7 @@ class OpenAITokenizer:
             "gpt-4",
             "gpt-5.1-chat-latest",
             "gpt-5.2-chat-latest",
+            "gpt-5.3-chat-latest",
         ]:
             func_init = 10
             func_end = 12
